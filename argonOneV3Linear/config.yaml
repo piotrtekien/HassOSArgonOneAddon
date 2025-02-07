@@ -41,16 +41,16 @@ devices:
   - /dev/i2c-26
 url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
 map:
-  - config
+  - homeassistant_config
   - ssl
   - addons
   - backup
   - share
   - media
 options:
-  Celsius or Fahrenheit: F
-  Minimum Temperature: 130
-  Maximum Temperature: 150
+  Celsius or Fahrenheit: C
+  Minimum Temperature: 20
+  Maximum Temperature: 70
   Create a Fan Speed entity in Home Assistant: false
   Log current temperature every 30 seconds: true
 schema:

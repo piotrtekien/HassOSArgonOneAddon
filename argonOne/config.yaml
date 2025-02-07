@@ -41,7 +41,7 @@ devices:
   - /dev/i2c-26
 url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
 map:
-  - config
+  - homeassistant_config
   - ssl
   - addons
   - backup
