@@ -1,7 +1,7 @@
-name: ArgonOne V3 Multi-Mode Cooling
-version: 33
+name: ArgonOne V3 Active Linear Cooling
+version: 30a
 slug: argon_one_v3_temp_linear
-description: Actively keeping your Argon devices cool with support for both Fluid (discrete) and Linear (continuous) cooling modes.
+description: Actively keeping your ArgonOne V3 cool.
 arch:
   - armhf
   - armv7
@@ -47,79 +47,14 @@ map:
   - share
   - media
 options:
-  # === General Options ===
-  Cooling Mode:
-    description: Select cooling mode: 'fluid' (discrete levels) or 'linear' (continuous control).
-    value: fluid
-  Update Interval:
-    description: Interval (in seconds) between temperature readings and fan updates.
-    value: 30
-  Create a Fan Speed entity in Home Assistant:
-    description: Enable sensor reporting of the fan speed.
-    value: true
-  Log current temperature every 30 seconds:
-    description: Enable periodic logging of temperature readings.
-    value: true
-  Debug Mode:
-    description: Enable additional debug logging for troubleshooting.
-    value: false
-
-  # === Advanced Options ===
-  I2C Port Override:
-    description: Manually specify the I2C port (0–26). Set to 255 to auto-detect.
-    value: 255
-  Manual Fan Speed Override:
-    description: Force a specific fan speed (0–100%); set to -1 to disable override.
-    value: -1
-  Fan Ramping Delay (seconds):
-    description: Delay between incremental fan speed adjustments (reduces mechanical stress).
-    value: 0
-  Safety Fan Speed (%):
-    description: Fan speed to set if an error is encountered.
-    value: 100
-
-  # === Fluid Mode Options ===
-  CorF:
-    description: Temperature unit for Fluid mode (C or F).
-    value: F
-  LowRange:
-    description: Temperature threshold below which the fan is off.
-    value: 130
-  MediumRange:
-    description: Temperature threshold for medium fan speed.
-    value: 140
-  HighRange:
-    description: Temperature threshold for high fan speed.
-    value: 150
-  QuietProfile:
-    description: Enable a quiet profile (lower fan percentages for low and medium ranges).
-    value: true
-
-  # === Linear Mode Options ===
-  "Celsius or Fahrenheit":
-    description: Temperature unit for Linear mode (C or F).
-    value: C
-  "Minimum Temperature":
-    description: Temperature at which the fan starts (≈1% speed).
-    value: 25
-  "Maximum Temperature":
-    description: Temperature at which the fan reaches 100%.
-    value: 70
+  Celsius or Fahrenheit: F
+  Minimum Temperature: 130
+  Maximum Temperature: 150
+  Create a Fan Speed entity in Home Assistant: false
+  Log current temperature every 30 seconds: true
 schema:
-  Cooling Mode: list(fluid|linear)
-  Update Interval: int(5,3600)
-  "Create a Fan Speed entity in Home Assistant": bool
-  "Log current temperature every 30 seconds": bool
-  Debug Mode: bool
-  I2C Port Override: int(0,26)
-  "Manual Fan Speed Override": int(-1,100)
-  "Fan Ramping Delay (seconds)": int(0,10)
-  "Safety Fan Speed (%)": int(0,100)
-  CorF: str
-  LowRange: int(0,255)
-  MediumRange: int(0,255)
-  HighRange: int(0,255)
-  QuietProfile: bool
-  "Celsius or Fahrenheit": list(C|F)
-  "Minimum Temperature": int(0,255)
-  "Maximum Temperature": int(0,255)
+  Celsius or Fahrenheit: list(C|F)
+  Minimum Temperature: int(0,255)
+  Maximum Temperature: int(0,255)
+  Create a Fan Speed entity in Home Assistant: bool
+  Log current temperature every 30 seconds: bool

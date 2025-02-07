@@ -1,42 +1,43 @@
-# ArgonOne Multi-Mode Cooling
+# Active Linear Cooling
 
-![Active Cooling](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/activecooling.jpg)
-![Linear Cooling Diagram](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
+![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/activecooling.jpg)
 
-This addon is designed for Argon devices and supports both Fluid (discrete) and Linear (continuous) cooling modes.
+This is an addon for Argon One V3 in Home Assistant.
+It's essentially a script that runs in a docker container.
+It enables and automates the Argon One V3 Active Cooling System with your specifications.
+It smoothly increases the fan speed based on the temperature.
 
-Running as a Docker container within Home Assistant, it dynamically adjusts the fan speed based on CPU temperature.
+This Addon keeps your temperature within specified ranges.
 
-## Features
+![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
 
-- **Dual Cooling Modes:**
-  - **Linear Mode:** Smooth, continuous fan speed control based on a linear mapping between a minimum and maximum temperature.
-  - **Fluid Mode:** Discrete fan levels based on predefined temperature thresholds.
-- **Manual Fan Speed Override:** Force a specific fan speed for testing or special conditions.
-- **Fan Ramping:** Gradually adjust fan speed to reduce mechanical stress.
-- **Adaptive Diagnostics:** AI-enhanced logging and diagnostic reporting for improved troubleshooting.
-- **Advanced I2C Control:** Auto-detection with manual override options for reliable communication.
-- **Home Assistant Integration:** Optionally create a sensor to monitor fan speed in real time.
-- **Safety Mechanism:** Automatically sets a safety fan speed in case of errors.
+- The addon manages fan speed from 0 to 100%
+- Configure "Minimum temperature" to set the 1% speed.
+- Configure "Maximum temperature" to set the 100% speed.
+- The fan will be off until the minimum temperature is reached.
 
-## Mathematical Formula (Linear Mode)
+Mathematic formula applied:
 
-The fan speed is calculated using:
- **y = a * x + b**
+```y = a*x + b
+y is fan speed
+x is instant temperature
+a is gradient
+b is origin when y=0
 
-Where:
-- **y**: Fan speed (%)
-- **x**: Current temperature
-- **a**: Gradient, calculated as `100 / (Maximum Temperature - Minimum Temperature)`
-- **b**: Offset, calculated as `-a * Minimum Temperature`
-
-## Installation & Usage
-
-1. Place the provided files into your addon directory.
-2. Adjust the configuration via Home Assistant's options.
-3. Start the addon and monitor the logs for diagnostic information.
-4. Optionally, enable the Home Assistant sensor for real-time fan speed monitoring.
+value_a=$((100/(tmaxi-tmini)))
+value_b=$((-value_a*tmini))
+fanPercent=$((value_a*value+value_b))
+```
 
 ## Support
 
-For assistance, visit the [Home Assistant Community Forum](https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/8) and provide detailed feedback.
+First, look in the Logs tab of the Addon's page in HA to see if i2c was set up properly,
+ or for any other errors.
+
+Also, enable the "Log current temperature every 30 seconds" setting and look in the
+ logs to see what the speed is. The fan is noisy and you might not be able to hear
+ different speeds, but logging will verify any changes.
+
+Need support? Click [here](https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/8).
+Try to be detailed about your feedback.
+If you can't be detailed, then please be as obnoxious as you can be.
