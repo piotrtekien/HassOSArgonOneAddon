@@ -102,7 +102,6 @@
             prettier_options: --write **/*.{json,js,md,yaml}
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
     build:
       name: Build ${{ matrix.architecture }}
       needs:
@@ -142,15 +141,15 @@
             echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
             from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
             echo "from=${from}" >> "$GITHUB_OUTPUT"
-            if [[ "${{ matrix.architecture}}" = "amd64" ]]; then
+            if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
               echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" = "i386" ]]; then
+            elif [[ "${{ matrix.architecture }}" == "i386" ]]; then
               echo "platform=linux/386" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" = "armhf" ]]; then
+            elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
               echo "platform=linux/arm/v6" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" = "armv7" ]]; then
+            elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
               echo "platform=linux/arm/v7" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" = "aarch64" ]]; then
+            elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
               echo "platform=linux/arm64/v8" >> "$GITHUB_OUTPUT"
             else
               echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
@@ -161,18 +160,19 @@
           run: |
             echo "version=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
             from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
-            echo "version=$(grep version: argonOne/config.yaml|sed 's/version: //')" >> "$GITHUB_OUTPUT"
-        - name: Login to Docker Hub
+            echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> "$GITHUB_OUTPUT"
+        - name: Login to GitHub Container Registry
           uses: docker/login-action@v2
           with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-        - name: 🚀 Build
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+        - name: 🚀 Build and push
           uses: docker/build-push-action@v2.4.0
           with:
             push: true
             no-cache: true
-            tags: piotrtekien/${{ matrix.architecture }}-homeassistantargononev3:${{ steps.version.outputs.version }}
+            tags: ghcr.io/${{ github.repository_owner }}/homeassistantargononev3:${{ matrix.architecture }}-${{ steps.version.outputs.version }}
             context: ${{ needs.information.outputs.target }}
             file: ${{ needs.information.outputs.target }}/Dockerfile
             platforms: ${{ steps.flags.outputs.platform }}
@@ -185,4 +185,3 @@
               BUILD_REF=${{ github.sha }}
               BUILD_REPOSITORY=${{ github.repository }}
               BUILD_VERSION=${{ needs.information.outputs.version }}
-  
