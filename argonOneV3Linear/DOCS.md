@@ -6,7 +6,7 @@
 
 Choose Celsius or Fahrenheit.
 
-- **Celsius or Fahrenheit** - Configures Celsius or Fahrenheit.
+- **Celsius or Fahrenheit** - Configures Celsius or Fahrenheit for Linear mode.
 
 ## Temperature Ranges
 
@@ -14,24 +14,29 @@ Choose Celsius or Fahrenheit.
 
 Set your fan ranges appropriately.
 
-- **Minimum Temperature** Minimum Temperature to turn on. Anything
-  lower will turn off.
-- **Maximum Temperature** The maximum temperature before 100% fan.
+- **Minimum Temperature**: Temperature at which the fan starts (≈1% speed).
+- **Maximum Temperature**: Temperature before the fan reaches 100%.
 
 ## Enable I2C
 
-In order to enable i2C, you must follow one of the methods below.
+To enable I2C, follow one of these methods:
 
 ### The easy way
 
-[Addon](https://community.home-assistant.io/t/add-on-hassos-i2c-configurator/264167)
+[Addon: HassOS I2C Configurator](https://community.home-assistant.io/t/add-on-hassos-i2c-configurator/264167)
 
 ### The official way
 
 [Official Guide](https://www.home-assistant.io/installation/raspberrypi/#enable-i2c)
 
+## Advanced Options
+
+- **I2C Port Override**: Manually specify the I2C port (0–26), or set to 255 for auto-detection.
+- **Manual Fan Speed Override**: Force a specific fan speed (0–100%); set to -1 to disable.
+- **Fan Ramping Delay**: Delay between incremental fan speed adjustments.
+- **Safety Fan Speed**: Fan speed to set if an error is encountered.
+
 ## Support
 
 Need support? Click [here](https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/8).
-Try to be detailed about your feedback.
-If you can't be detailed, then please be as obnoxious as you can be.
+Provide detailed feedback for effective troubleshooting.

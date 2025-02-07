@@ -1,7 +1,7 @@
-name: ArgonOne V3 Active Multi-Mode Cooling 1.9
-version: 31
-slug: argon_one_v3_multi
-description: Actively keeping your ArgonOne V3 cool with multi-mode control.
+name: ArgonOne V3 Multi-Mode Cooling
+version: 33
+slug: argon_one_v3_temp_linear
+description: Actively keeping your Argon devices cool with support for both Fluid (discrete) and Linear (continuous) cooling modes.
 arch:
   - armhf
   - armv7
@@ -38,7 +38,7 @@ devices:
   - /dev/i2c-24
   - /dev/i2c-25
   - /dev/i2c-26
-url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/8
+url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
 map:
   - config
   - ssl
@@ -47,43 +47,79 @@ map:
   - share
   - media
 options:
-  ## General Settings
-  Temperature Unit: list(C|F)
-  Mode: list(Linear|Fluid)
-  Update Interval (seconds): int(10,300)
-  Log Temperature: bool
-  Create a Fan Speed Entity in Home Assistant: bool
+  # === General Options ===
+  Cooling Mode:
+    description: Select cooling mode: 'fluid' (discrete levels) or 'linear' (continuous control).
+    value: fluid
+  Update Interval:
+    description: Interval (in seconds) between temperature readings and fan updates.
+    value: 30
+  Create a Fan Speed entity in Home Assistant:
+    description: Enable sensor reporting of the fan speed.
+    value: true
+  Log current temperature every 30 seconds:
+    description: Enable periodic logging of temperature readings.
+    value: true
+  Debug Mode:
+    description: Enable additional debug logging for troubleshooting.
+    value: false
 
-  ## Linear Mode Settings
-  Minimum Temperature: int(0,255)
-  Maximum Temperature: int(0,255)
+  # === Advanced Options ===
+  I2C Port Override:
+    description: Manually specify the I2C port (0–26). Set to 255 to auto-detect.
+    value: 255
+  Manual Fan Speed Override:
+    description: Force a specific fan speed (0–100%); set to -1 to disable override.
+    value: -1
+  Fan Ramping Delay (seconds):
+    description: Delay between incremental fan speed adjustments (reduces mechanical stress).
+    value: 0
+  Safety Fan Speed (%):
+    description: Fan speed to set if an error is encountered.
+    value: 100
 
-  ## Fluid Mode Settings
-  Low Temperature Threshold: int(0,255)
-  Medium Temperature Threshold: int(0,255)
-  High Temperature Threshold: int(0,255)
-  Quiet Profile (Fluid Mode): bool
+  # === Fluid Mode Options ===
+  CorF:
+    description: Temperature unit for Fluid mode (C or F).
+    value: F
+  LowRange:
+    description: Temperature threshold below which the fan is off.
+    value: 130
+  MediumRange:
+    description: Temperature threshold for medium fan speed.
+    value: 140
+  HighRange:
+    description: Temperature threshold for high fan speed.
+    value: 150
+  QuietProfile:
+    description: Enable a quiet profile (lower fan percentages for low and medium ranges).
+    value: true
 
-  ## Advanced Settings
-  I2C Port Override: int(0,26)  # Set to 255 to auto-detect
-  Manual Fan Speed Override: int(-1,100)  # -1 disables override; 0-100 forces that percentage
-  Fan Ramping Delay (seconds): int(0,10)   # Delay between incremental fan speed changes
-  Safety Fan Speed (%): int(0,100)
-  Diagnostics Mode: bool
+  # === Linear Mode Options ===
+  "Celsius or Fahrenheit":
+    description: Temperature unit for Linear mode (C or F).
+    value: C
+  "Minimum Temperature":
+    description: Temperature at which the fan starts (≈1% speed).
+    value: 25
+  "Maximum Temperature":
+    description: Temperature at which the fan reaches 100%.
+    value: 70
 schema:
-  Temperature Unit: list(C|F)
-  Mode: list(Linear|Fluid)
-  Update Interval (seconds): int(10,300)
-  Log Temperature: bool
-  Create a Fan Speed Entity in Home Assistant: bool
-  Minimum Temperature: int(0,255)
-  Maximum Temperature: int(0,255)
-  Low Temperature Threshold: int(0,255)
-  Medium Temperature Threshold: int(0,255)
-  High Temperature Threshold: int(0,255)
-  Quiet Profile (Fluid Mode): bool
+  Cooling Mode: list(fluid|linear)
+  Update Interval: int(5,3600)
+  "Create a Fan Speed entity in Home Assistant": bool
+  "Log current temperature every 30 seconds": bool
+  Debug Mode: bool
   I2C Port Override: int(0,26)
-  Manual Fan Speed Override: int(-1,100)
-  Fan Ramping Delay (seconds): int(0,10)
-  Safety Fan Speed (%): int(0,100)
-  Diagnostics Mode: bool
+  "Manual Fan Speed Override": int(-1,100)
+  "Fan Ramping Delay (seconds)": int(0,10)
+  "Safety Fan Speed (%)": int(0,100)
+  CorF: str
+  LowRange: int(0,255)
+  MediumRange: int(0,255)
+  HighRange: int(0,255)
+  QuietProfile: bool
+  "Celsius or Fahrenheit": list(C|F)
+  "Minimum Temperature": int(0,255)
+  "Maximum Temperature": int(0,255)
