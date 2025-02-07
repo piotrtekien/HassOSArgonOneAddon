@@ -158,7 +158,7 @@
             from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
             echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> "$GITHUB_OUTPUT"
         - name: Login to GitHub Container Registry
-          uses: docker/login-action@v2.3.0
+          uses: docker/login-action@v3.3.0
           with:
             registry: ghcr.io
             username: ${{ github.actor }}
