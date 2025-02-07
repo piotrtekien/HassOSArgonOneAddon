@@ -173,39 +173,88 @@ while true; do
 
   # Fan control logic (linear, fluid, extended modes)
   extra_info=""
-  if [ "$fan_control_mode" = "linear" ]; then
-    slope=$(( 100 / (max_temp - min_temp) ))
-    offset=$(( -slope * min_temp ))
-    fan_speed_percent=$(( slope * cpu_temp + offset ))
-    extra_info="(Linear Mode)"
-  elif [ "$fan_control_mode" = "fluid" ]; then
-    fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
-      ratio = (t - tmin) / (tmax - tmin);
-      if (ratio < 0) ratio = 0;
-      if (ratio > 1) ratio = 1;
-      printf "%d", (ratio ^ exp) * 100;
-    }')
-    extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
-  elif [ "$fan_control_mode" = "extended" ]; then
-    if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
-      fan_speed_percent=0
-      extra_info="(Extended Mode: OFF)"
-    elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_low")"; then
-      fan_speed_percent=25
-      extra_info="(Extended Mode: Low)"
-    elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_med")"; then
-      fan_speed_percent=50
-      extra_info="(Extended Mode: Medium)"
-    elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_high")"; then
-      fan_speed_percent=75
-      extra_info="(Extended Mode: High)"
-    else
-      fan_speed_percent=100
-      extra_info="(Extended Mode: Boost)"
+  if [ "$quiet" = "true" ]; then
+    # Quiet Profile: Reduce fan speed intelligently based on mode
+    if [ "$fan_control_mode" = "linear" ]; then
+      # In Linear Mode, clamp the fan speed to a max of 30% when Quiet Profile is enabled
+      slope=$(( 100 / (max_temp - min_temp) ))
+      offset=$(( -slope * min_temp ))
+      fan_speed_percent=$(( slope * cpu_temp + offset ))
+      if [ "$fan_speed_percent" -gt 30 ]; then
+        fan_speed_percent=30  # Cap the fan speed at 30%
+      fi
+      extra_info="(Linear Mode, Quiet Profile)"
+    elif [ "$fan_control_mode" = "fluid" ]; then
+      # In Fluid Mode, reduce the sensitivity (exponent) to lower fan speed
+      fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="1.0" 'BEGIN {
+        ratio = (t - tmin) / (tmax - tmin);
+        if (ratio < 0) ratio = 0;
+        if (ratio > 1) ratio = 1;
+        printf "%d", (ratio ^ exp) * 100;
+      }')
+      if [ "$fan_speed_percent" -gt 30 ]; then
+        fan_speed_percent=30  # Cap the fan speed at 30% in quiet mode
+      fi
+      extra_info="(Fluid Mode, Sensitivity: 1.0, Quiet Profile)"
+    elif [ "$fan_control_mode" = "extended" ]; then
+      # In Extended Mode, set lower thresholds for each level
+      if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
+        fan_speed_percent=0
+        extra_info="(Extended Mode: OFF, Quiet Profile)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_low")"; then
+        fan_speed_percent=15  # Lower threshold in quiet mode
+        extra_info="(Extended Mode: Low, Quiet Profile)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_med")"; then
+        fan_speed_percent=30  # Lower threshold in quiet mode
+        extra_info="(Extended Mode: Medium, Quiet Profile)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_high")"; then
+        fan_speed_percent=45  # Lower threshold in quiet mode
+        extra_info="(Extended Mode: High, Quiet Profile)"
+      else
+        fan_speed_percent=60  # Lower threshold in quiet mode
+        extra_info="(Extended Mode: Boost, Quiet Profile)"
+      fi
     fi
   else
-    echo "Unknown Fan Control Mode: ${fan_control_mode}"
-    exit 1
+    # Normal fan control logic if Quiet Profile is not enabled
+    if [ "$fan_control_mode" = "linear" ]; then
+      slope=$(( 100 / (max_temp - min_temp) ))
+      offset=$(( -slope * min_temp ))
+      fan_speed_percent=$(( slope * cpu_temp + offset ))
+      extra_info="(Linear Mode)"
+    elif [ "$fan_control_mode" = "fluid" ]; then
+      fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
+        ratio = (t - tmin) / (tmax - tmin);
+        if (ratio < 0) ratio = 0;
+        if (ratio > 1) ratio = 1;
+        printf "%d", (ratio ^ exp) * 100;
+      }')
+      extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
+    elif [ "$fan_control_mode" = "extended" ]; then
+      if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
+        fan_speed_percent=0
+        extra_info="(Extended Mode: OFF)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_low")"; then
+        fan_speed_percent=25
+        extra_info="(Extended Mode: Low)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_med")"; then
+        fan_speed_percent=50
+        extra_info="(Extended Mode: Medium)"
+      elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_high")"; then
+        fan_speed_percent=75
+        extra_info="(Extended Mode: High)"
+      else
+        fan_speed_percent=100
+        extra_info="(Extended Mode: Boost)"
+      fi
+    fi
+  fi
+
+  # Ensure fan speed stays within the valid range of 0-100
+  if (( fan_speed_percent < 0 )); then
+    fan_speed_percent=0
+  elif (( fan_speed_percent > 100 )); then
+    fan_speed_percent=100
   fi
 
   if [ "$previous_fan_speed" -ne "$fan_speed_percent" ]; then
