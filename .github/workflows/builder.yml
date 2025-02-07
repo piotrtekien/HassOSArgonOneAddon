@@ -101,7 +101,6 @@
         - lint-addon
         - lint-hadolint
         - lint-json
-        - lint-markdown
         - lint-prettier
         - lint-shellcheck
       runs-on: ubuntu-latest
