@@ -1,6 +1,6 @@
 # Configuration
 
-![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/Configuration.png)
+![image](https://raw.githubusercontent.com/piotrtekien/HomeAssistantArgonOneV3/main/gitResources/Configuration.png)
 
 ## Celsius or Fahrenheit
 
@@ -10,7 +10,7 @@ Choose Celsius or Fahrenheit.
 
 ## Temperature Ranges
 
-![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/FanRangeExplaination.png)
+![image](https://raw.githubusercontent.com/piotrtekien/HomeAssistantArgonOneV3/main/gitResources/FanRangeExplaination.png)
 
 Set your fan ranges appropriately.
 

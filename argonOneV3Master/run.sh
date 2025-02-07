@@ -50,7 +50,7 @@ calibrate_i2c_port() {
 
 # Compare two floating-point numbers using bash arithmetic.
 fcomp() {
-  local op="$2" x y digitx digity result
+  local op="$2" x y digitx digity
   IFS='.' read -r -a x <<< "${1##+([0]|[-]|[+])}"
   IFS='.' read -r -a y <<< "${3##+([0]|[-]|[+])}"
   while [[ "${x[1]}${y[1]}" =~ [^0] ]]; do
@@ -64,29 +64,34 @@ fcomp() {
   [[ ${3:0:1} = '-' ]] && (( y[0] *= -1 ))
   case "$op" in
     '<')
-      (( result = x[0] < y[0] ))
+      (( x[0] < y[0] ))
+      return
       ;;
     '<=')
-      (( result = x[0] <= y[0] ))
+      (( x[0] <= y[0] ))
+      return
       ;;
     '>')
-      (( result = x[0] > y[0] ))
+      (( x[0] > y[0] ))
+      return
       ;;
     '>=')
-      (( result = x[0] >= y[0] ))
+      (( x[0] >= y[0] ))
+      return
       ;;
     '==')
-      (( result = x[0] == y[0] ))
+      (( x[0] == y[0] ))
+      return
       ;;
     '!=')
-      (( result = x[0] != y[0] ))
+      (( x[0] != y[0] ))
+      return
       ;;
     *)
       echo "Invalid operator: $op" >&2
       return 1
       ;;
   esac
-  return $result
 }
 
 # Report the current fan speed state to Home Assistant.
@@ -124,6 +129,7 @@ set_fan_speed_generic() {
   local cpu_temp="$3"
   local temp_unit="$4"
 
+  # Clamp fan speed between 0 and 100.
   if (( fan_speed_percent < 0 )); then
     fan_speed_percent=0
   elif (( fan_speed_percent > 100 )); then
@@ -152,7 +158,7 @@ set_fan_speed_generic() {
 # Configuration Variables
 #######################################
 
-# Common settings
+# Common settings from options.json
 fan_control_mode=$(jq -r '."Fan Control Mode"' <options.json)
 [ -z "$fan_control_mode" ] || [ "$fan_control_mode" = "null" ] && fan_control_mode="linear"
 
@@ -215,20 +221,22 @@ while true; do
   #######################################
   extra_info=""
   if [ "$fan_control_mode" = "linear" ]; then
+    # Calculate a linear mapping from temperature to fan speed.
     slope=$(( 100 / (max_temp - min_temp) ))
     offset=$(( -slope * min_temp ))
     fan_speed_percent=$(( slope * cpu_temp + offset ))
     extra_info="(Linear Mode)"
   elif [ "$fan_control_mode" = "fluid" ]; then
+    # Calculate using a non-linear (exponential) response.
     fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
       ratio = (t - tmin) / (tmax - tmin);
       if (ratio < 0) ratio = 0;
       if (ratio > 1) ratio = 1;
-      printf "%d", (pow(ratio, exp)) * 100;
+      printf "%d", (ratio ^ exp) * 100;
     }')
     extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
   elif [ "$fan_control_mode" = "extended" ]; then
-    # Use extended thresholds with quiet-mode adjustments.
+    # Extended mode uses multiple thresholds with quiet-mode adjustments.
     if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
       fan_speed_percent=0
       extra_info="(Extended Mode: OFF)"
@@ -278,7 +286,6 @@ while true; do
   # Send Fan Speed if Changed
   #######################################
   if [ "$previous_fan_speed" -ne "$fan_speed_percent" ]; then
-    # Directly check the exit status of set_fan_speed_generic.
     if ! set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"; then
       fan_speed_percent="$previous_fan_speed"
     fi
