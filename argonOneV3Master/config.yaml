@@ -1,7 +1,7 @@
-name: ArgonOne V3 Active Linear Cooling
+name: ArgonOne V3 Master Cooling
 image: piotrtekien/{arch}-hassosargonone
 version: 30a
-slug: argon_one_v3_master
+slug: argon_one_v3_temp_master
 description: Actively keeping your ArgonOne V3 cool.
 arch:
   - armhf
@@ -53,14 +53,14 @@ options:
   Create a Fan Speed entity in Home Assistant: false
   Log current temperature every 30 seconds: true
   Update Interval: 30
-  Minimum Temperature: 130
-  Maximum Temperature: 150
+  Minimum Temperature: 20
+  Maximum Temperature: 70
   Fluid Sensitivity: 2.0
-  Extended Off Temperature: 130
-  Extended Low Temperature: 135
-  Extended Medium Temperature: 140
-  Extended High Temperature: 145
-  Extended Boost Temperature: 150
+  Extended Off Temperature: 30
+  Extended Low Temperature: 40
+  Extended Medium Temperature: 50
+  Extended High Temperature: 60
+  Extended Boost Temperature: 70
   Quiet Profile: false
 schema:
   Fan Control Mode: list(linear|fluid|extended)
