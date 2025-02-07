@@ -3,7 +3,7 @@ jobs:
     ...
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.2.2
       ...
       - name: Cleanup Git Configurations
         if: ${{ always() }}
