@@ -11,12 +11,14 @@ detected_port=""
 # Utility Functions
 #######################################
 
+# Convert a value to a float (ensure a decimal point exists)
 mk_float() {
   local str="$1"
   [[ "$str" == *"."* ]] || str="${str}.0"
   echo "$str"
 }
 
+# Scan for available I2C ports and set detected_port if a matching device is found.
 calibrate_i2c_port() {
   if ! compgen -G "/dev/i2c-*" > /dev/null; then
     echo "ERROR: I2C port not found. Please enable I2C for this add-on." >&2
@@ -39,6 +41,7 @@ calibrate_i2c_port() {
   done
 }
 
+# Compare two floating-point numbers using bash arithmetic.
 fcomp() {
   local oldIFS="$IFS" op="$2" x y digitx digity
   IFS='.'
@@ -57,6 +60,7 @@ fcomp() {
   (( "${x:-0}" "$op" "${y:-0}" ))
 }
 
+# Report the current fan speed state to Home Assistant.
 report_fan_speed() {
   local fan_speed_percent="$1"
   local cpu_temp="$2"
@@ -84,6 +88,7 @@ EOF
   exec 3>&-
 }
 
+# Set the fan speed via I2C; also reports the state if create_entity is true.
 set_fan_speed_generic() {
   local fan_speed_percent="$1"
   local extra_info="$2"
@@ -103,6 +108,7 @@ set_fan_speed_generic() {
     fan_speed_hex=$(printf '0x%x' "${fan_speed_percent}")
   fi
 
+  # Print a timestamp and state message.
   printf '%(%Y-%m-%d %H:%M:%S)T'
   echo ": ${cpu_temp}${temp_unit} - Fan ${fan_speed_percent}% ${extra_info} | Hex: ${fan_speed_hex}"
   i2cset -y "$detected_port" "0x01a" "0x80" "${fan_speed_hex}"
@@ -115,6 +121,7 @@ set_fan_speed_generic() {
 # Configuration Variables
 #######################################
 
+# Common settings
 fan_control_mode=$(jq -r '."Fan Control Mode"' <options.json)
 [ -z "$fan_control_mode" ] || [ "$fan_control_mode" = "null" ] && fan_control_mode="linear"
 
@@ -124,12 +131,13 @@ log_temp=$(jq -r '."Log current temperature every 30 seconds"' <options.json)
 update_interval=$(jq -r '."Update Interval"' <options.json)
 [ -z "$update_interval" ] || [ "$update_interval" = "null" ] && update_interval=30
 
+# For linear and fluid modes
 min_temp=$(jq -r '."Minimum Temperature"' <options.json)
 max_temp=$(jq -r '."Maximum Temperature"' <options.json)
-
 fluid_sensitivity=$(jq -r '."Fluid Sensitivity"' <options.json)
 [ -z "$fluid_sensitivity" ] && fluid_sensitivity=2.0
 
+# For extended mode
 ext_off=$(jq -r '."Extended Off Temperature"' <options.json)
 ext_low=$(jq -r '."Extended Low Temperature"' <options.json)
 ext_med=$(jq -r '."Extended Medium Temperature"' <options.json)
@@ -171,65 +179,61 @@ while true; do
   # Calculate Fan Speed Based on Mode
   #######################################
   extra_info=""
-  
   if [ "$fan_control_mode" = "linear" ]; then
     slope=$(( 100 / (max_temp - min_temp) ))
     offset=$(( -slope * min_temp ))
     fan_speed_percent=$(( slope * cpu_temp + offset ))
     extra_info="(Linear Mode)"
-  
   elif [ "$fan_control_mode" = "fluid" ]; then
     fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
       ratio = (t - tmin) / (tmax - tmin);
       if (ratio < 0) ratio = 0;
       if (ratio > 1) ratio = 1;
-      printf "%d", (pow(ratio, exp))*100;
+      printf "%d", (pow(ratio, exp)) * 100;
     }')
     extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
-  
   elif [ "$fan_control_mode" = "extended" ]; then
+    # Use extended thresholds with quiet-mode adjustments.
     if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
       fan_speed_percent=0
-      level="OFF"
+      extra_info="(Extended Mode: OFF)"
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_low")"; then
-      level="Low"
       if [ "$quiet" = "true" ]; then
         fan_speed_percent=1
       else
         fan_speed_percent=25
       fi
+      extra_info="(Extended Mode: Low)"
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_med")"; then
-      level="Medium"
       if [ "$quiet" = "true" ]; then
         fan_speed_percent=3
       else
         fan_speed_percent=50
       fi
+      extra_info="(Extended Mode: Medium)"
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_high")"; then
-      level="High"
       if [ "$quiet" = "true" ]; then
         fan_speed_percent=6
       else
         fan_speed_percent=75
       fi
+      extra_info="(Extended Mode: High)"
     else
-      level="Boost"
       if fcomp "$(mk_float "$cpu_temp")" '<' "$(mk_float "$ext_boost")"; then
         if [ "$quiet" = "true" ]; then
           fan_speed_percent=$(awk -v t="$cpu_temp" -v t_low="$ext_high" -v t_high="$ext_boost" 'BEGIN {
-            printf "%d", 6 + ((t - t_low) / (t_high - t_low))*(10 - 6);
+            printf "%d", 6 + ((t - t_low) / (t_high - t_low)) * (10 - 6);
           }')
         else
           fan_speed_percent=$(awk -v t="$cpu_temp" -v t_low="$ext_high" -v t_high="$ext_boost" 'BEGIN {
-            printf "%d", 75 + ((t - t_low) / (t_high - t_low))*25;
+            printf "%d", 75 + ((t - t_low) / (t_high - t_low)) * 25;
           }')
         fi
       else
         fan_speed_percent=100
       fi
+      extra_info="(Extended Mode: Boost)"
     fi
-    extra_info="(Extended Mode: ${level})"
-  
   else
     echo "Unknown Fan Control Mode: ${fan_control_mode}"
     exit 1
