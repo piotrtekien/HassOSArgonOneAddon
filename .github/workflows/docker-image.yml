@@ -20,7 +20,7 @@ jobs:
         && github.event.workflow_run.conclusion == 'success'
       )
     name: ℹ️ Gather add-on information
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.information.outputs.architectures }}
       build: ${{ steps.information.outputs.build }}
