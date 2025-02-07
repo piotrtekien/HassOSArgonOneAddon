@@ -36,7 +36,7 @@ jobs:
       
       - name: 🚀 Run add-on information action
         id: information
-        uses: frenck/action-addon-information@v1.0.0
+        uses: frenck/action-addon-information@v1.4.2
       
       - name: ℹ️ Gather version and environment
         id: release
