@@ -3,6 +3,11 @@
 # Modes supported: linear, fluid, extended
 
 #######################################
+# Global Variables
+#######################################
+detected_port=""
+
+#######################################
 # Utility Functions
 #######################################
 
@@ -13,7 +18,7 @@ mk_float() {
 }
 
 calibrate_i2c_port() {
-  if [ -z "$(ls /dev/i2c-*)" ]; then
+  if ! compgen -G "/dev/i2c-*" > /dev/null; then
     echo "ERROR: I2C port not found. Please enable I2C for this add-on." >&2
     sleep 999999
     exit 1
@@ -47,8 +52,8 @@ fcomp() {
     x[1]=${x[1]:1}
     y[1]=${y[1]:1}
   done
-  [[ ${1:0:1} == '-' ]] && (( x[0] *= -1 ))
-  [[ ${3:0:1} == '-' ]] && (( y[0] *= -1 ))
+  [[ ${1:0:1} = '-' ]] && (( x[0] *= -1 ))
+  [[ ${3:0:1} = '-' ]] && (( y[0] *= -1 ))
   (( "${x:-0}" "$op" "${y:-0}" ))
 }
 
@@ -100,9 +105,9 @@ set_fan_speed_generic() {
 
   printf '%(%Y-%m-%d %H:%M:%S)T'
   echo ": ${cpu_temp}${temp_unit} - Fan ${fan_speed_percent}% ${extra_info} | Hex: ${fan_speed_hex}"
-  i2cset -y "${detected_port}" "0x01a" "0x80" "${fan_speed_hex}"
+  i2cset -y "$detected_port" "0x01a" "0x80" "${fan_speed_hex}"
   local ret_val=$?
-  [ "${create_entity}" == "true" ] && report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${temp_unit}" "${extra_info}" &
+  [ "$create_entity" = "true" ] && report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${temp_unit}" "${extra_info}" &
   return ${ret_val}
 }
 
@@ -111,13 +116,13 @@ set_fan_speed_generic() {
 #######################################
 
 fan_control_mode=$(jq -r '."Fan Control Mode"' <options.json)
-[ -z "$fan_control_mode" ] || [ "$fan_control_mode" == "null" ] && fan_control_mode="linear"
+[ -z "$fan_control_mode" ] || [ "$fan_control_mode" = "null" ] && fan_control_mode="linear"
 
 temp_unit=$(jq -r '."Celsius or Fahrenheit"' <options.json)
 create_entity=$(jq -r '."Create a Fan Speed entity in Home Assistant"' <options.json)
 log_temp=$(jq -r '."Log current temperature every 30 seconds"' <options.json)
 update_interval=$(jq -r '."Update Interval"' <options.json)
-[ -z "$update_interval" ] || [ "$update_interval" == "null" ] && update_interval=30
+[ -z "$update_interval" ] || [ "$update_interval" = "null" ] && update_interval=30
 
 min_temp=$(jq -r '."Minimum Temperature"' <options.json)
 max_temp=$(jq -r '."Maximum Temperature"' <options.json)
@@ -141,9 +146,9 @@ previous_fan_speed=-1
 echo "Detecting I2C layout, expecting to see '1a'..."
 calibrate_i2c_port
 echo "I2C Port: ${detected_port}"
-[ -z "${detected_port}" ] || [ "${detected_port}" == "255" ] && { echo "Argon One V3 not detected. Exiting."; exit 1; }
+[ -z "$detected_port" ] || [ "$detected_port" = "255" ] && { echo "Argon One V3 not detected. Exiting."; exit 1; }
 
-trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y ${detected_port} 0x01a 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
+trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" 0x01a 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
 
 entity_update_interval_count=$(( 600 / update_interval ))
 poll_count=0
@@ -151,58 +156,58 @@ poll_count=0
 #######################################
 # Main Loop
 #######################################
-until false; do
+while true; do
   read -r cpu_raw_temp < /sys/class/thermal/thermal_zone0/temp
   cpu_temp=$(( cpu_raw_temp / 1000 ))
   unit="C"
-  if [ "$temp_unit" == "F" ]; then
+  if [ "$temp_unit" = "F" ]; then
     cpu_temp=$(( (cpu_temp * 9 / 5) + 32 ))
     unit="F"
   fi
 
-  [ "${log_temp}" == "true" ] && echo "Current Temperature = ${cpu_temp} °${unit}"
+  [ "$log_temp" = "true" ] && echo "Current Temperature = ${cpu_temp} °${unit}"
 
   #######################################
   # Calculate Fan Speed Based on Mode
   #######################################
   extra_info=""
   
-  if [ "$fan_control_mode" == "linear" ]; then
+  if [ "$fan_control_mode" = "linear" ]; then
     slope=$(( 100 / (max_temp - min_temp) ))
     offset=$(( -slope * min_temp ))
     fan_speed_percent=$(( slope * cpu_temp + offset ))
     extra_info="(Linear Mode)"
   
-  elif [ "$fan_control_mode" == "fluid" ]; then
+  elif [ "$fan_control_mode" = "fluid" ]; then
     fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
       ratio = (t - tmin) / (tmax - tmin);
       if (ratio < 0) ratio = 0;
       if (ratio > 1) ratio = 1;
-      printf "%d", (ratio^exp)*100;
+      printf "%d", (pow(ratio, exp))*100;
     }')
     extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
   
-  elif [ "$fan_control_mode" == "extended" ]; then
+  elif [ "$fan_control_mode" = "extended" ]; then
     if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
       fan_speed_percent=0
       level="OFF"
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_low")"; then
       level="Low"
-      if [ "$quiet" == "true" ]; then
+      if [ "$quiet" = "true" ]; then
         fan_speed_percent=1
       else
         fan_speed_percent=25
       fi
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_med")"; then
       level="Medium"
-      if [ "$quiet" == "true" ]; then
+      if [ "$quiet" = "true" ]; then
         fan_speed_percent=3
       else
         fan_speed_percent=50
       fi
     elif fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_high")"; then
       level="High"
-      if [ "$quiet" == "true" ]; then
+      if [ "$quiet" = "true" ]; then
         fan_speed_percent=6
       else
         fan_speed_percent=75
@@ -210,7 +215,7 @@ until false; do
     else
       level="Boost"
       if fcomp "$(mk_float "$cpu_temp")" '<' "$(mk_float "$ext_boost")"; then
-        if [ "$quiet" == "true" ]; then
+        if [ "$quiet" = "true" ]; then
           fan_speed_percent=$(awk -v t="$cpu_temp" -v t_low="$ext_high" -v t_high="$ext_boost" 'BEGIN {
             printf "%d", 6 + ((t - t_low) / (t_high - t_low))*(10 - 6);
           }')
@@ -234,14 +239,14 @@ until false; do
   # Send Fan Speed if Changed
   #######################################
   set +e
-  if [ "${previous_fan_speed}" != "${fan_speed_percent}" ]; then
+  if [ "$previous_fan_speed" -ne "$fan_speed_percent" ]; then
     if ! set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"; then
-      fan_speed_percent=${previous_fan_speed}
+      fan_speed_percent="$previous_fan_speed"
     fi
-    previous_fan_speed=${fan_speed_percent}
+    previous_fan_speed="${fan_speed_percent}"
   fi
 
-  if [ $(( poll_count % entity_update_interval_count )) -eq 0 ] && [ "${create_entity}" == "true" ]; then
+  if [ $(( poll_count % entity_update_interval_count )) -eq 0 ] && [ "$create_entity" = "true" ]; then
     report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${unit}" "${extra_info}"
   fi
 
