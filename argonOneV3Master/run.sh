@@ -1,4 +1,5 @@
 #!/usr/bin/with-contenv bashio
+# shellcheck shell=bash
 # Upgraded Argon One V3 Fan Control Add-on
 # Modes supported: linear, fluid, extended
 
@@ -43,11 +44,9 @@ calibrate_i2c_port() {
 
 # Compare two floating-point numbers using bash arithmetic.
 fcomp() {
-  local oldIFS="$IFS" op="$2" x y digitx digity
-  IFS='.'
-  x=( ${1##+([0]|[-]|[+])} )
-  y=( ${3##+([0]|[-]|[+])} )
-  IFS="$oldIFS"
+  local op="$2" x y digitx digity result
+  IFS='.' read -r -a x <<< "${1##+([0]|[-]|[+])}"
+  IFS='.' read -r -a y <<< "${3##+([0]|[-]|[+])}"
   while [[ "${x[1]}${y[1]}" =~ [^0] ]]; do
     digitx=${x[1]:0:1}
     digity=${y[1]:0:1}
@@ -57,7 +56,31 @@ fcomp() {
   done
   [[ ${1:0:1} = '-' ]] && (( x[0] *= -1 ))
   [[ ${3:0:1} = '-' ]] && (( y[0] *= -1 ))
-  (( "${x:-0}" "$op" "${y:-0}" ))
+  case "$op" in
+    '<')
+      (( result = x[0] < y[0] ))
+      ;;
+    '<=')
+      (( result = x[0] <= y[0] ))
+      ;;
+    '>')
+      (( result = x[0] > y[0] ))
+      ;;
+    '>=')
+      (( result = x[0] >= y[0] ))
+      ;;
+    '==')
+      (( result = x[0] == y[0] ))
+      ;;
+    '!=')
+      (( result = x[0] != y[0] ))
+      ;;
+    *)
+      echo "Invalid operator: $op" >&2
+      return 1
+      ;;
+  esac
+  return $result
 }
 
 # Report the current fan speed state to Home Assistant.
@@ -82,7 +105,7 @@ EOF
   echo -ne "\r\n" >&3
   echo -ne "${reqBody}" >&3
   local timeout=5
-  while read -t "${timeout}" -r line; do
+  while read -t "${timeout}" -r _; do
     :
   done <&3
   exec 3>&-
