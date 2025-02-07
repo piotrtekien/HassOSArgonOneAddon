@@ -104,7 +104,7 @@ report_fan_speed() {
 EOF
 )
   exec 3<>/dev/tcp/hassio/80
-  echo -ne "POST /homeassistant/api/states/sensor.argon_one_v3_fan_speed HTTP/1.1\r\n" >&3
+  echo -ne "POST /homeassistant/api/states/sensor.argon_one_v3_master HTTP/1.1\r\n" >&3
   echo -ne "Connection: close\r\n" >&3
   echo -ne "Authorization: Bearer ${SUPERVISOR_TOKEN}\r\n" >&3
   echo -ne "Content-Length: $(echo -n "${reqBody}" | wc -c)\r\n" >&3
