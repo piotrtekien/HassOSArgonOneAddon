@@ -6,14 +6,12 @@
 # Utility Functions
 #######################################
 
-# mk_float: Ensure the input is in floating-point format.
 mk_float() {
   local str="$1"
   [[ "$str" == *"."* ]] || str="${str}.0"
   echo "$str"
 }
 
-# calibrate_i2c_port: Scans available I2C ports for the Argon One V3 device.
 calibrate_i2c_port() {
   if [ -z "$(ls /dev/i2c-*)" ]; then
     echo "ERROR: I2C port not found. Please enable I2C for this add-on." >&2
@@ -36,7 +34,6 @@ calibrate_i2c_port() {
   done
 }
 
-# fcomp: Compare two floating-point numbers.
 fcomp() {
   local oldIFS="$IFS" op="$2" x y digitx digity
   IFS='.'
@@ -55,7 +52,6 @@ fcomp() {
   (( "${x:-0}" "$op" "${y:-0}" ))
 }
 
-# report_fan_speed: Sends the current fan state to Home Assistant.
 report_fan_speed() {
   local fan_speed_percent="$1"
   local cpu_temp="$2"
@@ -78,12 +74,11 @@ EOF
   echo -ne "${reqBody}" >&3
   local timeout=5
   while read -t "${timeout}" -r line; do
-    :  # Discard response
+    :
   done <&3
   exec 3>&-
 }
 
-# set_fan_speed_generic: Clamps and sends fan speed (as hex) via I²C, then reports if enabled.
 set_fan_speed_generic() {
   local fan_speed_percent="$1"
   local extra_info="$2"
@@ -115,7 +110,6 @@ set_fan_speed_generic() {
 # Configuration Variables
 #######################################
 
-# Load shared options
 fan_control_mode=$(jq -r '."Fan Control Mode"' <options.json)
 [ -z "$fan_control_mode" ] || [ "$fan_control_mode" == "null" ] && fan_control_mode="linear"
 
@@ -125,15 +119,12 @@ log_temp=$(jq -r '."Log current temperature every 30 seconds"' <options.json)
 update_interval=$(jq -r '."Update Interval"' <options.json)
 [ -z "$update_interval" ] || [ "$update_interval" == "null" ] && update_interval=30
 
-# For Linear and Fluid modes:
 min_temp=$(jq -r '."Minimum Temperature"' <options.json)
 max_temp=$(jq -r '."Maximum Temperature"' <options.json)
 
-# Fluid mode only:
 fluid_sensitivity=$(jq -r '."Fluid Sensitivity"' <options.json)
 [ -z "$fluid_sensitivity" ] && fluid_sensitivity=2.0
 
-# For Extended mode:
 ext_off=$(jq -r '."Extended Off Temperature"' <options.json)
 ext_low=$(jq -r '."Extended Low Temperature"' <options.json)
 ext_med=$(jq -r '."Extended Medium Temperature"' <options.json)
@@ -161,10 +152,9 @@ poll_count=0
 # Main Loop
 #######################################
 until false; do
-  # Read CPU temperature
   read -r cpu_raw_temp < /sys/class/thermal/thermal_zone0/temp
   cpu_temp=$(( cpu_raw_temp / 1000 ))
-  local unit="C"
+  unit="C"
   if [ "$temp_unit" == "F" ]; then
     cpu_temp=$(( (cpu_temp * 9 / 5) + 32 ))
     unit="F"
@@ -175,17 +165,15 @@ until false; do
   #######################################
   # Calculate Fan Speed Based on Mode
   #######################################
-  extra_info=""  # For reporting
+  extra_info=""
   
   if [ "$fan_control_mode" == "linear" ]; then
-    # Linear interpolation
     slope=$(( 100 / (max_temp - min_temp) ))
     offset=$(( -slope * min_temp ))
     fan_speed_percent=$(( slope * cpu_temp + offset ))
     extra_info="(Linear Mode)"
   
   elif [ "$fan_control_mode" == "fluid" ]; then
-    # Fluid (exponential) mapping: fan = ((T - min) / (max - min))^sensitivity * 100
     fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN {
       ratio = (t - tmin) / (tmax - tmin);
       if (ratio < 0) ratio = 0;
@@ -195,7 +183,6 @@ until false; do
     extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
   
   elif [ "$fan_control_mode" == "extended" ]; then
-    # Extended discrete mode with multiple thresholds.
     if fcomp "$(mk_float "$cpu_temp")" '<=' "$(mk_float "$ext_off")"; then
       fan_speed_percent=0
       level="OFF"
@@ -222,7 +209,6 @@ until false; do
       fi
     else
       level="Boost"
-      # If temperature falls between ext_high and ext_boost, interpolate
       if fcomp "$(mk_float "$cpu_temp")" '<' "$(mk_float "$ext_boost")"; then
         if [ "$quiet" == "true" ]; then
           fan_speed_percent=$(awk -v t="$cpu_temp" -v t_low="$ext_high" -v t_high="$ext_boost" 'BEGIN {
@@ -249,8 +235,9 @@ until false; do
   #######################################
   set +e
   if [ "${previous_fan_speed}" != "${fan_speed_percent}" ]; then
-    set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"
-    [ $? -ne 0 ] && fan_speed_percent=${previous_fan_speed}
+    if ! set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"; then
+      fan_speed_percent=${previous_fan_speed}
+    fi
     previous_fan_speed=${fan_speed_percent}
   fi
 
