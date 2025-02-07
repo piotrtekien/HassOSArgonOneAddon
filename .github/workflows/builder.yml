@@ -172,7 +172,7 @@ jobs:
         with:
           push: true
           no-cache: true
-          tags: adamoutler/${{ matrix.architecture }}-hassosargonone:${{ steps.version.outputs.version }}
+          tags: piotrtekien/${{ matrix.architecture }}-hassosargonone:${{ steps.version.outputs.version }}
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           platforms: ${{ steps.flags.outputs.platform }}

@@ -1,7 +1,7 @@
-name: ArgonOne V3 Active Linear Cooling
-version: 30a
-slug: argon_one_v3_temp_linear
-description: Actively keeping your ArgonOne V3 cool.
+name: ArgonOne V3 Active Multi-Mode Cooling 1.9
+version: 31
+slug: argon_one_v3_multi
+description: Actively keeping your ArgonOne V3 cool with multi-mode control.
 arch:
   - armhf
   - armv7
@@ -38,7 +38,7 @@ devices:
   - /dev/i2c-24
   - /dev/i2c-25
   - /dev/i2c-26
-url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
+url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/8
 map:
   - config
   - ssl
@@ -47,14 +47,43 @@ map:
   - share
   - media
 options:
-  Celsius or Fahrenheit: F
-  Minimum Temperature: 130
-  Maximum Temperature: 150
-  Create a Fan Speed entity in Home Assistant: false
-  Log current temperature every 30 seconds: true
-schema:
-  Celsius or Fahrenheit: list(C|F)
+  ## General Settings
+  Temperature Unit: list(C|F)
+  Mode: list(Linear|Fluid)
+  Update Interval (seconds): int(10,300)
+  Log Temperature: bool
+  Create a Fan Speed Entity in Home Assistant: bool
+
+  ## Linear Mode Settings
   Minimum Temperature: int(0,255)
   Maximum Temperature: int(0,255)
-  Create a Fan Speed entity in Home Assistant: bool
-  Log current temperature every 30 seconds: bool
+
+  ## Fluid Mode Settings
+  Low Temperature Threshold: int(0,255)
+  Medium Temperature Threshold: int(0,255)
+  High Temperature Threshold: int(0,255)
+  Quiet Profile (Fluid Mode): bool
+
+  ## Advanced Settings
+  I2C Port Override: int(0,26)  # Set to 255 to auto-detect
+  Manual Fan Speed Override: int(-1,100)  # -1 disables override; 0-100 forces that percentage
+  Fan Ramping Delay (seconds): int(0,10)   # Delay between incremental fan speed changes
+  Safety Fan Speed (%): int(0,100)
+  Diagnostics Mode: bool
+schema:
+  Temperature Unit: list(C|F)
+  Mode: list(Linear|Fluid)
+  Update Interval (seconds): int(10,300)
+  Log Temperature: bool
+  Create a Fan Speed Entity in Home Assistant: bool
+  Minimum Temperature: int(0,255)
+  Maximum Temperature: int(0,255)
+  Low Temperature Threshold: int(0,255)
+  Medium Temperature Threshold: int(0,255)
+  High Temperature Threshold: int(0,255)
+  Quiet Profile (Fluid Mode): bool
+  I2C Port Override: int(0,26)
+  Manual Fan Speed Override: int(-1,100)
+  Fan Ramping Delay (seconds): int(0,10)
+  Safety Fan Speed (%): int(0,100)
+  Diagnostics Mode: bool
