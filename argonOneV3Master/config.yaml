@@ -1,12 +1,8 @@
-name: Argon One V3 Fan Control
+name: ArgonOne V3 Active Linear Cooling
+image: piotrtekien/{arch}-hassosargonone
 version: 30a
-slug: argon_one_v3_temp_control
-description: >
-  Advanced fan control for Argon One V3 on Raspberry Pi and Home Assistant Yellow.
-  Choose between three modes:
-  - **Linear:** Continuous, proportional control between a minimum and maximum temperature.
-  - **Fluid:** Non-linear (exponential) scaling with adjustable sensitivity.
-  - **Extended:** Discrete multi-level control with extra thresholds and optional quiet profile.
+slug: argon_one_v3_temp_linear
+description: Actively keeping your ArgonOne V3 cool.
 arch:
   - armhf
   - armv7
@@ -16,8 +12,34 @@ homeassistant_api: true
 hassio_role: homeassistant
 hassio_api: true
 devices:
-  - /dev/i2c-*
-url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598
+  - /dev/i2c-0
+  - /dev/i2c-1
+  - /dev/i2c-2
+  - /dev/i2c-3
+  - /dev/i2c-4
+  - /dev/i2c-5
+  - /dev/i2c-6
+  - /dev/i2c-7
+  - /dev/i2c-8
+  - /dev/i2c-9
+  - /dev/i2c-10
+  - /dev/i2c-11
+  - /dev/i2c-12
+  - /dev/i2c-13
+  - /dev/i2c-14
+  - /dev/i2c-15
+  - /dev/i2c-16
+  - /dev/i2c-17
+  - /dev/i2c-18
+  - /dev/i2c-19
+  - /dev/i2c-20
+  - /dev/i2c-21
+  - /dev/i2c-22
+  - /dev/i2c-23
+  - /dev/i2c-24
+  - /dev/i2c-25
+  - /dev/i2c-26
+url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
 map:
   - config
   - ssl
@@ -26,23 +48,20 @@ map:
   - share
   - media
 options:
-  "Fan Control Mode": linear         # Options: linear, fluid, extended
-  "Celsius or Fahrenheit": C           # Options: C or F
+  "Fan Control Mode": linear
+  "Celsius or Fahrenheit": C
   "Create a Fan Speed entity in Home Assistant": false
   "Log current temperature every 30 seconds": true
-  "Update Interval": 30                # Polling interval in seconds (min=5, max=300)
-  # Options for Linear & Fluid modes:
-  "Minimum Temperature": 130           # Temperature threshold where fan starts (in chosen unit)
-  "Maximum Temperature": 150           # Temperature threshold where fan runs at 100%
-  # Fluid Mode only:
-  "Fluid Sensitivity": 2.0             # Exponent for non-linear mapping (1.0 = linear; default 2.0)
-  # Options for Extended mode:
-  "Extended Off Temperature": 130      # Temperature below which the fan remains off
-  "Extended Low Temperature": 135      # Threshold for Low level
-  "Extended Medium Temperature": 140   # Threshold for Medium level
-  "Extended High Temperature": 145     # Threshold for High level
-  "Extended Boost Temperature": 150    # Temperature at which fan runs at 100%
-  "Quiet Profile": false               # For discrete modes, use reduced fan speeds
+  "Update Interval": 30
+  "Minimum Temperature": 130
+  "Maximum Temperature": 150
+  "Fluid Sensitivity": 2.0
+  "Extended Off Temperature": 130
+  "Extended Low Temperature": 135
+  "Extended Medium Temperature": 140
+  "Extended High Temperature": 145
+  "Extended Boost Temperature": 150
+  "Quiet Profile": false
 schema:
   "Fan Control Mode": list(linear|fluid|extended)
   "Celsius or Fahrenheit": list(C|F)

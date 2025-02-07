@@ -1,8 +1,8 @@
 #include <tunables/global>
 
-profile argonone_temp_control flags=(attach_disconnected, mediate_deleted) {
+profile deskpipro flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
-
+  
   capability,
   file,
 
@@ -29,7 +29,6 @@ profile argonone_temp_control flags=(attach_disconnected, mediate_deleted) {
   /dev/i2c-5 mrwkl,
   /dev/i2c-6 mrwkl,
   /dev/i2c-7 mrwkl,
-  /dev/i2c-8 mrwkl,
   /dev/i2c-9 mrwkl,
   /dev/i2c-10 mrwkl,
   /dev/i2c-11 mrwkl,
@@ -52,9 +51,11 @@ profile argonone_temp_control flags=(attach_disconnected, mediate_deleted) {
   # Data access
   /data/** rw,
 
-  # Suppress ptrace denials (e.g. using 'docker ps' or 'ps' inside a container)
-  ptrace (trace, read) peer=docker-default,
+
+  # suppress ptrace denials when using 'docker ps' or using 'ps' inside a container
+  ptrace (trace,read) peer=docker-default,
  
-  # Docker daemon confinement requires an explicit allow rule for signal
-  signal (receive) set=(kill, term) peer=/usr/bin/docker,
+  # docker daemon confinement requires explict allow rule for signal
+  signal (receive) set=(kill,term) peer=/usr/bin/docker,
+
 }

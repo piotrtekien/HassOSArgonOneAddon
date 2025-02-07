@@ -7,6 +7,7 @@
 # Global Variables
 #######################################
 detected_port=""
+device_address=""  # Will be set to the detected I2C device address (e.g. 0x1a or 0x1b)
 
 #######################################
 # Utility Functions
@@ -19,7 +20,7 @@ mk_float() {
   echo "$str"
 }
 
-# Scan for available I2C ports and set detected_port if a matching device is found.
+# Scan for available I2C ports and set detected_port (and device_address) if a matching device is found.
 calibrate_i2c_port() {
   if ! compgen -G "/dev/i2c-*" > /dev/null; then
     echo "ERROR: I2C port not found. Please enable I2C for this add-on." >&2
@@ -32,10 +33,15 @@ calibrate_i2c_port() {
     local detection
     detection=$(i2cdetect -y "${port}")
     echo "${detection}"
-    if [[ "${detection}" == *"10: -- -- -- -- -- -- -- -- -- -- 1a -- -- -- -- --"* ]] || \
-       [[ "${detection}" == *"10: -- -- -- -- -- -- -- -- -- -- -- 1b -- -- -- --"* ]]; then
+    if [[ "${detection}" == *"10: -- -- -- -- -- -- -- -- -- -- 1a -- -- -- -- --"* ]]; then
+      device_address="0x1a"
       detected_port="${port}"
-      echo "Found Argon One V3 device at ${device}"
+      echo "Found Argon One V3 device at ${device} (address ${device_address})"
+      break
+    elif [[ "${detection}" == *"10: -- -- -- -- -- -- -- -- -- -- 1b -- -- -- --"* ]]; then
+      device_address="0x1b"
+      detected_port="${port}"
+      echo "Found Argon One V3 device at ${device} (address ${device_address})"
       break
     fi
     echo "Device not found on ${device}"
@@ -134,7 +140,7 @@ set_fan_speed_generic() {
   # Print a timestamp and state message.
   printf '%(%Y-%m-%d %H:%M:%S)T'
   echo ": ${cpu_temp}${temp_unit} - Fan ${fan_speed_percent}% ${extra_info} | Hex: ${fan_speed_hex}"
-  i2cset -y "$detected_port" "0x01a" "0x80" "${fan_speed_hex}"
+  i2cset -y "$detected_port" "$device_address" "0x80" "${fan_speed_hex}"
   local ret_val=$?
   if [ "$create_entity" = "true" ]; then
     report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${temp_unit}" "${extra_info}" &
@@ -176,12 +182,16 @@ quiet=$(jq -r '."Quiet Profile"' <options.json)
 
 previous_fan_speed=-1
 
-echo "Detecting I2C layout, expecting to see '1a'..."
+echo "Detecting I2C layout, expecting to see '1a' or '1b'..."
 calibrate_i2c_port
-echo "I2C Port: ${detected_port}"
-[ -z "$detected_port" ] || [ "$detected_port" = "255" ] && { echo "Argon One V3 not detected. Exiting."; exit 1; }
+echo "I2C Port: ${detected_port}  |  Device Address: ${device_address}"
+if [ -z "$detected_port" ] || [ "$detected_port" = "255" ]; then
+  echo "Argon One V3 not detected. Exiting."
+  exit 1
+fi
 
-trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" 0x01a 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
+# Trap errors, INT, and TERM. (If you don’t want to trigger safe-mode on a clean exit, remove EXIT.)
+trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" "$device_address" 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
 
 entity_update_interval_count=$(( 600 / update_interval ))
 poll_count=0
