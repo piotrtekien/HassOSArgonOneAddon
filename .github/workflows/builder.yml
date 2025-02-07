@@ -28,13 +28,12 @@
         target: ${{ steps.information.outputs.target }}
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run add-on information action
           id: information
           uses: frenck/action-addon-information@v1.4.2
           with:
             path: "argonOne/"
-  
     lint-addon:
       name: Lint Add-on
       needs:
@@ -42,7 +41,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run Add-on Lint
           uses: frenck/action-addon-linter@v2
           with:
@@ -55,7 +54,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run Hadolint
           uses: brpaz/hadolint-action@v1.4.0
           with:
@@ -66,18 +65,17 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run JQ
           run: |
             shopt -s globstar
             cat **/*.json | jq '.'
-  
     lint-markdown:
       name: MarkdownLint
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run mdl
           uses: actionshub/markdownlint@2.0.2
   
@@ -86,7 +84,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run Shellcheck
           uses: ludeeus/action-shellcheck@1.1.0
           env:
@@ -97,7 +95,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v3
+          uses: actions/checkout@v2.3.4
         - name: 🚀 Run Prettier
           uses: creyD/prettier_action@v3.3
           with:
@@ -124,7 +122,7 @@
           uses: actions/checkout@v3
         - name: 🏗 Set up build cache
           id: cache
-          uses: actions/cache@v3
+          uses: actions/cache@v3.3.1
           with:
             path: /tmp/.docker-cache
             key: docker-${{ matrix.architecture }}-${{ github.sha }}
@@ -144,15 +142,15 @@
             echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
             from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
             echo "from=${from}" >> "$GITHUB_OUTPUT"
-            if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
+            if [[ "${{ matrix.architecture}}" = "amd64" ]]; then
               echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" == "i386" ]]; then
+            elif [[ "${{ matrix.architecture }}" = "i386" ]]; then
               echo "platform=linux/386" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
+            elif [[ "${{ matrix.architecture }}" = "armhf" ]]; then
               echo "platform=linux/arm/v6" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
+            elif [[ "${{ matrix.architecture }}" = "armv7" ]]; then
               echo "platform=linux/arm/v7" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
+            elif [[ "${{ matrix.architecture }}" = "aarch64" ]]; then
               echo "platform=linux/arm64/v8" >> "$GITHUB_OUTPUT"
             else
               echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
@@ -163,19 +161,18 @@
           run: |
             echo "version=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
             from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
-            echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> "$GITHUB_OUTPUT"
-        - name: Login to GitHub Container Registry
+            echo "version=$(grep version: argonOne/config.yaml|sed 's/version: //')" >> "$GITHUB_OUTPUT"
+        - name: Login to Docker Hub
           uses: docker/login-action@v2
           with:
-            registry: ghcr.io
-            username: ${{ github.actor }}
-            password: ${{ secrets.GITHUB_TOKEN }}
-        - name: 🚀 Build and push
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        - name: 🚀 Build
           uses: docker/build-push-action@v2.4.0
           with:
             push: true
             no-cache: true
-            tags: ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}:${{ matrix.architecture }}-${{ steps.version.outputs.version }}
+            tags: adamoutler/${{ matrix.architecture }}-hassosargonone:${{ steps.version.outputs.version }}
             context: ${{ needs.information.outputs.target }}
             file: ${{ needs.information.outputs.target }}/Dockerfile
             platforms: ${{ steps.flags.outputs.platform }}
