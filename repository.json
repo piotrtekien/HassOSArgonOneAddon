@@ -1,5 +1,50 @@
 {
-  "name": "ArgonOne V3 Advanced Cooling",
+  "name": "ArgonOne Active Cooling",
+  "slug": "argon_one_temp",
+  "description": "Actively keeping your Argon One cool, with advanced temperature regulation and fan speed control.",
   "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
-  "maintainer": "swiftfreeze"
+  "archive": "https://github.com/piotrtekien/HomeAssistantArgonOneV3/releases/latest/download/argonone_v3.tar.gz",
+  "image": "https://raw.githubusercontent.com/piotrtekien/HomeAssistantArgonOneV3/main/icon.png",
+  "install_type": "zip",
+  "arch": ["armhf", "armv7", "aarch64"],
+  "version": "30a",
+  "hacs": {
+    "releaseNotes": "https://github.com/piotrtekien/HomeAssistantArgonOneV3/releases",
+    "installed": false,
+    "currentVersion": "30a"
+  },
+  "repository": "piotrtekien/HomeAssistantArgonOneV3",
+  "author": "piotrtekien",
+  "addons": [
+    {
+      "name": "ArgonOne Active Cooling",
+      "slug": "argon_one_temp",
+      "description": "A Home Assistant Addon to control cooling for ArgonOne case via I2C.",
+      "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
+      "version": "30a",
+      "arch": ["armhf", "armv7", "aarch64"],
+      "install_type": "zip",
+      "environment": "stable"
+    },
+    {
+      "name": "ArgonOne V3 Active Linear Cooling",
+      "slug": "argon_one_v3_temp_linear",
+      "description": "An advanced linear cooling solution for the ArgonOne V3 case.",
+      "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
+      "version": "30a",
+      "arch": ["armhf", "armv7", "aarch64"],
+      "install_type": "zip",
+      "environment": "stable"
+    },
+    {
+      "name": "ArgonOne V3 Master Cooling",
+      "slug": "argon_one_v3_master_temp",
+      "description": "Master fan control for ArgonOne V3 case for ultimate temperature regulation.",
+      "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
+      "version": "30a",
+      "arch": ["armhf", "armv7", "aarch64"],
+      "install_type": "zip",
+      "environment": "stable"
+    }
+  ]
 }

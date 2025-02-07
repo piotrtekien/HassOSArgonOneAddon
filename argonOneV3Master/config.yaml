@@ -1,8 +1,7 @@
-name: ArgonOne Active Cooling
-image: piotrtekien/{arch}-homeassistantargononev3
 version: 30a
-slug: argon_one_temp
-description: Actively keeping your Argon One cool.
+slug: argon_one_v3_master_temp
+name: ArgonOne V3 Master Cooling
+description: "Master fan control for ArgonOne V3 case for ultimate temperature regulation."
 arch:
   - armhf
   - armv7
@@ -48,18 +47,32 @@ map:
   - share
   - media
 options:
-  CorF: C
-  LowRange: 20
-  MediumRange: 45
-  HighRange: 60
-  QuietProfile: true
+  fan_control_mode: linear  # linear, fluid, extended
+  Celsius or Fahrenheit: C  # C or F
   Create a Fan Speed entity in Home Assistant: true
   Log current temperature every 30 seconds: true
+  Update Interval: 30  # Interval for updating the temperature (in seconds)
+  Minimum Temperature: 20
+  Maximum Temperature: 70
+  Fluid Sensitivity: 2.0
+  Extended Off Temperature: 20
+  Extended Low Temperature: 30
+  Extended Medium Temperature: 40
+  Extended High Temperature: 50
+  Extended Boost Temperature: 60
+  Quiet Profile: true
 schema:
-  CorF: str
-  LowRange: int(0,255)
-  MediumRange: int(0,255)
-  HighRange: int(0,255)
-  QuietProfile: bool
+  fan_control_mode: str
+  Celsius or Fahrenheit: list(C|F)
   Create a Fan Speed entity in Home Assistant: bool
   Log current temperature every 30 seconds: bool
+  Update Interval: int(1,3600)
+  Minimum Temperature: int(0,255)
+  Maximum Temperature: int(0,255)
+  Fluid Sensitivity: float(0,10)
+  Extended Off Temperature: float(0,255)
+  Extended Low Temperature: float(0,255)
+  Extended Medium Temperature: float(0,255)
+  Extended High Temperature: float(0,255)
+  Extended Boost Temperature: float(0,255)
+  Quiet Profile: bool

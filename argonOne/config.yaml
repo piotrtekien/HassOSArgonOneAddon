@@ -1,8 +1,7 @@
-name: ArgonOne Active Cooling
-image: piotrtekien/{arch}-homeassistantargononev3
 version: 30a
 slug: argon_one_temp
-description: Actively keeping your Argon One cool.
+name: ArgonOne Active Cooling
+description: "Actively keeping your Argon One cool, with advanced temperature regulation and fan speed control."
 arch:
   - armhf
   - armv7
