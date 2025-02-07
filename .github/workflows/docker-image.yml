@@ -1,4 +1,4 @@
-name: Deploy
+name: Docker Deploy
 
 # yamllint disable-line rule:truthy
 on:
