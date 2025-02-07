@@ -1,6 +1,8 @@
 # Argon One V3 Master Fan Control
 
-This Home Assistant add-on manages the fan speed for the Argon One V3 on Raspberry Pi and Home Assistant Yellow, adjusting based on temperature.
+This Home Assistant add-on manages the fan speed
+for the Argon One V3 on Raspberry Pi 5 and can
+adjust based on temperature.
 
 ## Features
 
@@ -18,14 +20,15 @@ This Home Assistant add-on manages the fan speed for the Argon One V3 on Raspber
 
 ## Operation
 
-1. **Temperature Reading:** Monitors CPU temperature.
+**Temperature Reading:** Monitors CPU temperature.
 
-2. **Speed Calculation:** Adjusts fan speed based on selected mode.
+**Speed Calculation:** Adjusts fan speed based on selected mode.
 
-3. **Command Execution:** Sends speed commands via I2C.
+**Command Execution:** Sends speed commands via I2C.
 
-4. **Error Handling:** Activates safe mode on errors.
+**Error Handling:** Activates safe mode on errors.
 
 ## Configuration
 
-Settings are read from `options.json`, including fan mode, temperature unit, and update interval.
+Settings are read from `options.json`,
+including fan mode, temperature unit, and update interval.
