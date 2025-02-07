@@ -1,0 +1,13 @@
+jobs:
+  build:
+    ...
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v3
+      ...
+      - name: Cleanup Git Configurations
+        if: ${{ always() }}
+        run: |
+          git submodule foreach --recursive 'git config --local --name-only --get-regexp "core\\.sshCommand" && git config --local --unset-all "core.sshCommand" || :'
+          git config --local --name-only --get-regexp "http.https://github.com/.extraheader" && git config --local --unset-all "http.https://github.com/.extraheader" || :
+          git submodule foreach --recursive 'git config --local --name-only --get-regexp "http.https://github.com/.extraheader" && git config --local --unset-all "http.https://github.com/.extraheader" || :'
