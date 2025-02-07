@@ -113,7 +113,9 @@ set_fan_speed_generic() {
   echo ": ${cpu_temp}${temp_unit} - Fan ${fan_speed_percent}% ${extra_info} | Hex: ${fan_speed_hex}"
   i2cset -y "$detected_port" "0x01a" "0x80" "${fan_speed_hex}"
   local ret_val=$?
-  [ "$create_entity" = "true" ] && report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${temp_unit}" "${extra_info}" &
+  if [ "$create_entity" = "true" ]; then
+    report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${temp_unit}" "${extra_info}" &
+  fi
   return ${ret_val}
 }
 
@@ -242,8 +244,8 @@ while true; do
   #######################################
   # Send Fan Speed if Changed
   #######################################
-  set +e
   if [ "$previous_fan_speed" -ne "$fan_speed_percent" ]; then
+    # Directly check the exit status of set_fan_speed_generic.
     if ! set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"; then
       fan_speed_percent="$previous_fan_speed"
     fi
