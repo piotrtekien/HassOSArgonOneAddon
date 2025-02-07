@@ -1,5 +1,5 @@
 name: ArgonOne V3 Active Linear Cooling
-image: piotrtekien/{arch}-hassosargonone
+image: piotrtekien/{arch}-homeassistantargononev3
 version: 30a
 slug: argon_one_v3_temp_linear
 description: Actively keeping your ArgonOne V3 cool.

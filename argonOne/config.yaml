@@ -1,5 +1,5 @@
 name: ArgonOne Active Cooling
-image: piotrtekien/{arch}-hassosargonone
+image: piotrtekien/{arch}-homeassistantargononev3
 version: 30a
 slug: argon_one_temp
 description: Actively keeping your Argon One cool.
