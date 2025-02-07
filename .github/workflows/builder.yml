@@ -175,7 +175,7 @@ jobs:
           no-cache: true
           tags: ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}:${{ matrix.architecture }}-${{ steps.version.outputs.version }}
           context: ${{ needs.information.outputs.target }}
-          file: ${{ needs.information.outputs target }}/Dockerfile
+          file: ${{ needs.information.outputs.target }}/Dockerfile
           platforms: ${{ steps.flags.outputs.platform }}
           build-args: |
             BUILD_ARCH=${{ matrix.architecture }}
