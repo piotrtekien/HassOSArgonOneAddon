@@ -28,7 +28,7 @@
         target: ${{ steps.information.outputs.target }}
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run add-on information action
           id: information
           uses: frenck/action-addon-information@v1.4.2
@@ -41,7 +41,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run Add-on Lint
           uses: frenck/action-addon-linter@v2
           with:
@@ -53,7 +53,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run Hadolint
           uses: brpaz/hadolint-action@v1.4.0
           with:
@@ -63,7 +63,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run JQ
           run: |
             shopt -s globstar
@@ -73,7 +73,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run mdl
           uses: actionshub/markdownlint@v3.1.4
     lint-shellcheck:
@@ -81,9 +81,9 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run Shellcheck
-          uses: ludeeus/action-shellcheck@v1.1.0
+          uses: ludeeus/action-shellcheck@2.0.0
           env:
             SHELLCHECK_OPTS: -s bash -e SC2206 -e SC1105 -e SC2046 -e SC2261
     lint-prettier:
@@ -91,7 +91,7 @@
       runs-on: ubuntu-latest
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🚀 Run Prettier
           uses: creyD/prettier_action@v3.3
           with:
@@ -114,7 +114,7 @@
           architecture: ${{ fromJson(needs.information.outputs.architectures) }}
       steps:
         - name: ⤵️ Check out code from GitHub
-          uses: actions/checkout@v4.4.0
+          uses: actions/checkout@v4.2.2
         - name: 🏗 Set up build cache
           id: cache
           uses: actions/cache@v4.4.0
