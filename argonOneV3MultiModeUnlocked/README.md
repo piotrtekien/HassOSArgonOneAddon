@@ -1,31 +1,31 @@
-# ArgonOne V3 Active Linear Cooling Add-on
+# Argon One V3 Advanced Fan Control Add-on
 
 ![Active Cooling](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/activecooling.jpg)
 
-This Home Assistant add-on enables and automates the active cooling system on your ArgonOne V3. Running in a Docker container, it smoothly adjusts the fan speed based on real-time temperature readings to keep your device within safe operating ranges.
+This Home Assistant add-on provides **advanced fan control** for the Argon One V3 device on Raspberry Pi and Home Assistant Yellow. Running in a Docker container on ARM‐based systems, it smoothly adjusts the fan speed based on real-time temperature readings and supports three distinct control modes for maximum flexibility.
 
 ![Fan Control](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
 
 ## Features
 
-- **Dynamic Fan Control:** Adjusts fan speed from 0% to 100% based on temperature.
-- **Configurable Temperature Ranges:** Set a minimum temperature to trigger the fan and a maximum temperature for full-speed operation.
+- **Multi-Mode Fan Control:**  
+  - **Linear Mode:** Continuous, proportional control between a minimum and maximum temperature.  
+  - **Fluid Mode:** Non-linear (exponential) response with adjustable sensitivity for a smoother transition.  
+  - **Extended Mode:** Discrete control with multiple thresholds and optional quiet settings for fine-tuned performance.
+- **Configurable Temperature Ranges:** Set thresholds for each mode to tailor fan response.
 - **Safe Mode:** On error, the fan is set to 100% to protect your hardware.
-- **Optional Logging & Entity Reporting:** Log temperature at regular intervals and (optionally) report fan speed to Home Assistant.
+- **Optional Logging & Entity Reporting:** Log temperature readings and report fan speed changes to Home Assistant.
 
 ## How It Works
 
-The fan speed is determined by a linear formula:
+Depending on the chosen mode, the fan speed is calculated as follows:
 
-```bash
-y = a * x + b
-# where:
-# y = fan speed (%)
-# x = current temperature
-# a = gradient (calculated as 100 / (MaxTemperature - MinTemperature))
-# b = offset (calculated as -a * MinTemperature)
-
-value_a=$((100 / (tmaxi - tmini)))
-value_b=$((-value_a * tmini))
-fanPercent=$((value_a * value + value_b))
-
+- **Linear Mode:**  
+  Uses a simple linear formula:
+  ```bash
+  y = a * x + b
+  # where:
+  # y = fan speed (%)
+  # x = current temperature
+  # a = 100 / (MaxTemperature - Minimum Temperature)
+  # b = -a * Minimum Temperature

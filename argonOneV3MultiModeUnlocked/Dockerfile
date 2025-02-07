@@ -1,6 +1,5 @@
-# Dockerfile for ArgonOne V3 Active Linear Cooling Add-on
-
-ARG BUILD_FROM=ghcr.io/hassio-addons/base/amd64:9.1.7
+# Dockerfile for Argon One V3 Advanced Fan Control Add-on (ARM only)
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/armv7:9.1.7
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 

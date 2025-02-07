@@ -1,5 +1,17 @@
 {
   "name": "ArgonOne Active Cooling (Mod)",
-  "url": "https://github.com/piotrtekien/HassOSArgonOne",
-  "maintainer": "swiftfreeze"
+  "url": "https://github.com/piotrtekien/HassOSArgonOneAddon",
+  "maintainer": "swiftfreeze",
+  "addons": {
+    "argon_one_v3_fan_control": {
+      "name": "ArgonOne Active Cooling (Mod)",
+      "slug": "argon_one_v3_fan_control",
+      "description": "Advanced fan control for ArgonOne V3 with multiple control modes (linear, fluid, extended).",
+      "version": "3.0.0",
+      "arch": ["armhf", "armv7", "aarch64"],
+      "startup": "services",
+      "boot": "auto",
+      "schema": {}
+    }
+  }
 }
