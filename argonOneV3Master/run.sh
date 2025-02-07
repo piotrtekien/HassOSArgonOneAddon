@@ -153,6 +153,7 @@ fi
 # Trap errors, INT, and TERM
 trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" "$device_address" 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
 
+# Calculate how often we should update the entity based on the user-defined interval
 entity_update_interval_count=$(( 600 / update_interval ))
 poll_count=0
 
@@ -210,6 +211,11 @@ while true; do
   if [ "$previous_fan_speed" -ne "$fan_speed_percent" ]; then
     set_fan_speed_generic "${fan_speed_percent}" "${extra_info}" "${cpu_temp}" "${unit}"
     previous_fan_speed="${fan_speed_percent}"
+  fi
+
+  # Report fan speed at regular intervals
+  if [ $(( poll_count % entity_update_interval_count )) -eq 0 ] && [ "$create_entity" = "true" ]; then
+    report_fan_speed "${fan_speed_percent}" "${cpu_temp}" "${unit}" "${extra_info}"
   fi
 
   sleep "${update_interval}"

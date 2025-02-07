@@ -48,31 +48,31 @@ map:
   - media
 options:
   fan_control_mode: linear  # linear, fluid, extended
-  Celsius or Fahrenheit: C  # C or F
-  Create a Fan Speed entity in Home Assistant: true
-  Log current temperature every 30 seconds: true
-  Update Interval: 30  # Interval for updating the temperature (in seconds)
-  Minimum Temperature: 20
-  Maximum Temperature: 70
-  Fluid Sensitivity: 2.0
-  Extended Off Temperature: 20
-  Extended Low Temperature: 30
-  Extended Medium Temperature: 40
-  Extended High Temperature: 50
-  Extended Boost Temperature: 60
-  Quiet Profile: true
+  Celsius_or_Fahrenheit: C  # C or F
+  Create_a_Fan_Speed_entity_in_Home_Assistant: true
+  Log_current_temperature_every_30_seconds: true
+  Update_Interval: 30  # Interval for updating the temperature (in seconds)
+  Minimum_Temperature: 20
+  Maximum_Temperature: 70
+  Fluid_Sensitivity: 2.0
+  Extended_Off_Temperature: 20
+  Extended_Low_Temperature: 30
+  Extended_Medium_Temperature: 40
+  Extended_High_Temperature: 50
+  Extended_Boost_Temperature: 60
+  Quiet_Profile: true
 schema:
   fan_control_mode: str
-  Celsius or Fahrenheit: list(C|F)
-  Create a Fan Speed entity in Home Assistant: bool
-  Log current temperature every 30 seconds: bool
-  Update Interval: int(1,3600)
-  Minimum Temperature: int(0,255)
-  Maximum Temperature: int(0,255)
-  Fluid Sensitivity: float(0,10)
-  Extended Off Temperature: float(0,255)
-  Extended Low Temperature: float(0,255)
-  Extended Medium Temperature: float(0,255)
-  Extended High Temperature: float(0,255)
-  Extended Boost Temperature: float(0,255)
-  Quiet Profile: bool
+  Celsius_or_Fahrenheit: list(C|F)
+  Create_a_Fan_Speed_entity_in_Home_Assistant: bool
+  Log_current_temperature_every_30_seconds: bool
+  Update_Interval: int(1,3600)
+  Minimum_Temperature: int(0,255)
+  Maximum_Temperature: int(0,255)
+  Fluid_Sensitivity: float(0,10)
+  Extended_Off_Temperature: float(0,255)
+  Extended_Low_Temperature: float(0,255)
+  Extended_Medium_Temperature: float(0,255)
+  Extended_High_Temperature: float(0,255)
+  Extended_Boost_Temperature: float(0,255)
+  Quiet_Profile: bool
