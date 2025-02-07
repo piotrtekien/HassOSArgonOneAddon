@@ -1,6 +1,6 @@
 # Configuration
 
-![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/linearsettings.png)
+![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/linearsettings.png)
 
 ## Celsius or Fahrenheit
 
@@ -10,7 +10,7 @@ Choose Celsius or Fahrenheit.
 
 ## Temperature Ranges
 
-![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
+![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
 
 Set your fan ranges appropriately.
 

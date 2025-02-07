@@ -1,6 +1,6 @@
 # Active Linear Cooling
 
-![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/activecooling.jpg)
+![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/activecooling.jpg)
 
 This is an addon for Argon One V3 in Home Assistant.
 It's essentially a script that runs in a docker container.
@@ -9,7 +9,7 @@ It smoothly increases the fan speed based on the temperature.
 
 This Addon keeps your temperature within specified ranges.
 
-![image](https://raw.githubusercontent.com/adamoutler/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
+![image](https://raw.githubusercontent.com/piotrtekien/HassOSArgonOneAddon/main/gitResources/argonlinear.png)
 
 - The addon manages fan speed from 0 to 100%
 - Configure "Minimum temperature" to set the 1% speed.
