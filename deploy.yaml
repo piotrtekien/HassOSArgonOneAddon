@@ -1,16 +1,12 @@
----
 name: Deploy
 
-# yamllint disable-line rule:truthy
 on:
   release:
-    types:
-      - published
+    types: [published]
   workflow_run:
     workflows: ["CI"]
     branches: [main]
-    types:
-      - completed
+    types: [completed]
 
 jobs:
   information:
@@ -33,7 +29,7 @@ jobs:
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
       - name: 🚀 Run add-on information action
         id: information
         uses: frenck/action-addon-information@v1.0.0
@@ -55,6 +51,7 @@ jobs:
           fi
           echo "environment=${environment}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: 👷 Build & Deploy ${{ matrix.architecture }}
     needs: information
@@ -64,19 +61,19 @@ jobs:
         architecture: ${{ fromJson(needs.information.outputs.architectures) }}
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
       - name: 🏗 Set up build cache
         id: cache
-        uses: actions/cache@v2.1.5
+        uses: actions/cache@v3
         with:
           path: /tmp/.docker-cache
-          key: docker-${{ github.ref }}-${{ matrix.architecture }}-${{ github.sha }}
+          key: ${{ runner.os }}-docker-${{ matrix.architecture }}-${{ github.sha }}
           restore-keys: |
-            docker-${{ github.ref }}-${{ matrix.architecture }}
+            ${{ runner.os }}-docker-${{ matrix.architecture }}
       - name: 🏗 Set up QEMU
-        uses: docker/setup-qemu-action@v1.0.2
+        uses: docker/setup-qemu-action@v2.2.0
       - name: 🏗 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1.1.2
+        uses: docker/setup-buildx-action@v2
       - name: ℹ️ Compose build flags
         id: flags
         shell: bash
@@ -84,35 +81,33 @@ jobs:
           echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
           from=$(jq --raw-output ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
           echo "from=${from}" >> "$GITHUB_OUTPUT"
-          if [[ "${{ matrix.architecture }}" = "amd64" ]]; then
+          if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
             echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.architecture }}" = "i386" ]]; then
+          elif [[ "${{ matrix.architecture }}" == "i386" ]]; then
             echo "platform=linux/386" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.architecture }}" = "armhf" ]]; then
+          elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
             echo "platform=linux/arm/v6" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.architecture }}" = "armv7" ]]; then
+          elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
             echo "platform=linux/arm/v7" >> "$GITHUB_OUTPUT"
-          elif [[ "${{ matrix.architecture }}" = "aarch64" ]]; then
+          elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
             echo "platform=linux/arm64/v8" >> "$GITHUB_OUTPUT"
           else
             echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
             exit 1
           fi
-      - name: 🏗  Login to GitHub Container Registry
-        uses: docker/login-action@v1.8.0
+      - name: 🏗 Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PASSWORD }}
       - name: 🚀 Build and push
-        uses: docker/build-push-action@v2.4.0
+        uses: docker/build-push-action@v2
         with:
           push: true
-          # yamllint disable rule:line-length
           tags: |
             ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
             ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
-          # yamllint enable rule:line-length
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
@@ -129,6 +124,7 @@ jobs:
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
             BUILD_VERSION=${{ needs.information.outputs.version }}
+
   publish-edge:
     name: 📢 Publish to edge repository
     if: needs.information.outputs.environment == 'edge'
@@ -140,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v1.1.3
+        uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.DISPATCH_TOKEN }}
           repository: hassio-addons/repository-edge
@@ -152,11 +148,10 @@ jobs:
               "repository": "${{ github.repository }}",
               "version": "${{ needs.information.outputs.version }}"
             }
+
   publish-beta:
     name: 📢 Publish to beta repository
-    if: |
-      needs.information.outputs.environment == 'beta' ||
-      needs.information.outputs.environment == 'stable'
+    if: needs.information.outputs.environment == 'beta' || needs.information.outputs.environment == 'stable'
     needs:
       - information
       - deploy
@@ -165,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v1.1.3
+        uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.DISPATCH_TOKEN }}
           repository: hassio-addons/repository-beta
@@ -177,6 +172,7 @@ jobs:
               "repository": "${{ github.repository }}",
               "version": "${{ github.event.release.tag_name }}"
             }
+
   publish-stable:
     name: 📢 Publish to stable repository
     if: needs.information.outputs.environment == 'stable'
@@ -188,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v1.1.3
+        uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.DISPATCH_TOKEN }}
           repository: hassio-addons/repository
