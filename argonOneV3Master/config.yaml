@@ -1,6 +1,6 @@
 name: Argon One V3 Fan Control
 version: 30a
-slug: argon_one_v3_fan_control
+slug: argon_one_v3_temp_control
 description: >
   Advanced fan control for Argon One V3 on Raspberry Pi and Home Assistant Yellow.
   Choose between three modes:
