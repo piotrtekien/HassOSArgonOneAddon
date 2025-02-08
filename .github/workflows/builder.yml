@@ -145,8 +145,16 @@ jobs:
           # Platform logic
           if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
             echo "platform=linux/amd64" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
+            echo "platform=linux/arm/v6" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
+            echo "platform=linux/arm/v7" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
+            echo "platform=linux/arm64/v8" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
+            exit 1
           fi
-          # Add more platform conditions as needed
       - name: ℹ️ Get Version
         id: version
         run: |
