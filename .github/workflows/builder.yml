@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       architectures: ${{ steps.set_outputs.outputs.architectures }}
-      build: ${{ steps.set_outputs.outputs.build }}
-      description: ${{ steps.set_outputs.outputs.description }}
-      name: ${{ steps.set_outputs.outputs.name }}
-      slug: ${{ steps.set_outputs.outputs.slug }}
-      target: ${{ steps.set_outputs.outputs.target }}
+      build: ${{ steps.information.outputs.build }}
+      description: ${{ steps.information.outputs.description }}
+      name: ${{ steps.information.outputs.name }}
+      slug: ${{ steps.information.outputs.slug }}
+      target: ${{ steps.information.outputs.target }}
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
@@ -34,13 +34,18 @@ jobs:
         with:
           path: "argonOne/"
 
-      - name: 🛠 Set outputs correctly
+      - name: 🛠 Ensure architectures is valid JSON
         id: set_outputs
         run: |
           arch_raw="${{ steps.information.outputs.architectures }}"
           
-          # Ensure architectures is a valid JSON array
-          arch_json=$(echo "$arch_raw" | jq -R 'split(" ")' | jq -c '.')
+          # Convert space-separated values to JSON array if needed
+          if [[ "$arch_raw" != "["* ]]; then
+            arch_json=$(echo "$arch_raw" | jq -R 'split(" ")' | jq -c '.')
+          else
+            arch_json="$arch_raw"
+          fi
+          
           echo "architectures=$arch_json" >> "$GITHUB_ENV"
           echo "architectures=$arch_json" >> "$GITHUB_OUTPUT"
 
@@ -117,7 +122,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
-    name: Build ${{ matrix.architecture }}
+    name: Build for ${{ matrix.architecture }}
     needs:
       - information
       - lint-addon
@@ -165,6 +170,6 @@ jobs:
           platforms: linux/${{ matrix.architecture }}
           build-args: |
             BUILD_ARCH=${{ matrix.architecture }}
-            BUILD_DESCRIPTION=${{ env.description }}
-            BUILD_NAME=${{ env.name }}
+            BUILD_DESCRIPTION=${{ needs.information.outputs.description }}
+            BUILD_NAME=${{ needs.information.outputs.name }}
             BUILD_VERSION=${{ env.version }}
