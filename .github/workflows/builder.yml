@@ -154,9 +154,10 @@
         - name: ℹ️ Get Version
           id: version
           run: |
-            echo "version=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> "$GITHUB_OUTPUT"
-            from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
-            echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> "$GITHUB_OUTPUT"
+            version=$(grep version: argonOne/config.yaml | sed 's/version: //')
+            version=$(echo $version | tr -d '"')  # Remove any accidental quotes
+            echo "version=$version" >> "$GITHUB_ENV"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
         - name: Login to GitHub Container Registry
           uses: docker/login-action@v3.3.0
           with:
