@@ -1,218 +1,219 @@
 ---
-name: CI
-
-# yamllint disable-line rule:truthy
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - reopened
-      - synchronize
-  workflow_dispatch:
-
-jobs:
-  information:
-    name: Gather add-on information
-    runs-on: ubuntu-latest
-    outputs:
-      architectures: ${{ steps.set_outputs.outputs.architectures }}
-      build: ${{ steps.set_outputs.outputs.build }}
-      description: ${{ steps.set_outputs.outputs.description }}
-      name: ${{ steps.set_outputs.outputs.name }}
-      slug: ${{ steps.set_outputs.outputs.slug }}
-      target: ${{ steps.set_outputs.outputs.target }}
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run add-on information action
-        id: information
-        uses: frenck/action-addon-information@v1.4.2
-        with:
-          path: "argonOne/"
-      - name: Set outputs
-        id: set_outputs
-        run: |
-          arch_raw="$(echo "${{ steps.information.outputs.architectures }}" | xargs)"
-          if [[ "$arch_raw" != "["* ]]; then
-            arch_json=$(echo "$arch_raw" | sed 's/,/","/g')
-            echo "architectures=[\"${arch_json}\"]" >> $GITHUB_OUTPUT
-          else
-            echo "architectures=${arch_raw}" >> $GITHUB_OUTPUT
-          fi
-          echo "build=${{ steps.information.outputs.build }}" >> $GITHUB_OUTPUT
-          echo "description=${{ steps.information.outputs.description }}" >> $GITHUB_OUTPUT
-          echo "name=${{ steps.information.outputs.name }}" >> $GITHUB_OUTPUT
-          echo "slug=${{ steps.information.outputs.slug }}" >> $GITHUB_OUTPUT
-          echo "target=${{ steps.information.outputs.target }}" >> $GITHUB_OUTPUT
-
-  lint-addon:
-    name: Lint Add-on
-    needs:
-      - information
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run Add-on Lint
-        uses: frenck/action-addon-linter@v2
-        with:
-          path: "./${{ needs.information.outputs.target }}"
-
-  lint-hadolint:
-    name: Hadolint
-    needs:
-      - information
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run Hadolint
-        uses: brpaz/hadolint-action@v1.4.0
-        with:
-          dockerfile: "./${{ needs.information.outputs.target }}/Dockerfile"
-
-  lint-json:
-    name: JSON Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run JQ
-        run: |
-          shopt -s globstar
-          cat **/*.json | jq '.'
-
-  lint-markdown:
-    name: MarkdownLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run mdl
-        uses: actionshub/markdownlint@v3.1.4
-
-  lint-shellcheck:
-    name: Shellcheck
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run Shellcheck
-        uses: ludeeus/action-shellcheck@2.0.0
-        env:
-          SHELLCHECK_OPTS: -s bash -e SC2206 -e SC1105 -e SC2046 -e SC2261
-
-  lint-prettier:
-    name: Prettier
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🚀 Run Prettier
-        uses: creyD/prettier_action@v3.3
-        with:
-          prettier_options: --write **/*.{json,js,md,yaml}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build:
-    name: Build ${{ matrix.architecture }}
-    needs:
-      - information
-      - lint-addon
-      - lint-hadolint
-      - lint-json
-      - lint-markdown
-      - lint-prettier
-      - lint-shellcheck
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        architecture: ${{ fromJson(needs.information.outputs.architectures) }}
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-
-      - name: Set build environment variables
-        run: |
-          echo "description=${{ needs.information.outputs.description }}" >> $GITHUB_ENV
-          echo "name=${{ needs.information.outputs.name }}" >> $GITHUB_ENV
-
-      - name: 🏗 Set up build cache
-        id: cache
-        uses: actions/cache@v4.2.0
-        with:
-          path: /tmp/.docker-cache
-          key: docker-${{ matrix.architecture }}-${{ github.sha }}
-          restore-keys: |
-            docker-${{ matrix.architecture }}
-            docker-
-            
-      - name: 🏗 Set up QEMU
-        uses: docker/setup-qemu-action@v3.4.0
-
-      - name: 🏗 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.9.0
-
-      - name: 🏗 Set up Codenotary Community Attestation Service (CAS)
-        uses: frenck/action-setup-cas@v0.1.1
-        with:
-          version: v1.0.3
-
-      - name: ℹ️ Compose build flags
-        id: flags
-        run: |
-          echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
-          echo "from=${from}" >> $GITHUB_ENV
-          if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
-            echo "platform=linux/amd64" >> $GITHUB_ENV
-          elif [[ "${{ matrix.architecture }}" == "i386" ]]; then
-            echo "platform=linux/386" >> $GITHUB_ENV
-          elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
-            echo "platform=linux/arm/v6" >> $GITHUB_ENV
-          elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
-            echo "platform=linux/arm/v7" >> $GITHUB_ENV
-          elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
-            echo "platform=linux/arm64/v8" >> $GITHUB_ENV
-          else
-            echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
-            exit 1
-
-      - name: ℹ️ Get Version
-        id: version
-        run: |
-          echo "version=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
-          echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> $GITHUB_ENV
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🚀 Build and push
-        uses: docker/build-push-action@v6.13.0
-        with:
-          push: true
-          no-cache: true
-          tags: ghcr.io/${{ github.repository_owner }}/homeassistantargononev3:${{ matrix.architecture }}-${{ env.version }}
-          context: ${{ needs.information.outputs.target }}
-          file: ${{ needs.information.outputs.target }}/Dockerfile
-          platforms: ${{ env.platform }}
-          build-args: |
-            BUILD_ARCH=${{ matrix.architecture }}
-            BUILD_DATE=${{ env.date }}
-            BUILD_DESCRIPTION=${{ env.description }}
-            BUILD_FROM=${{ env.from }}
-            BUILD_NAME=${{ env.name }}
-            BUILD_REF=${{ github.sha }}
-            BUILD_REPOSITORY=${{ github.repository }}
-            BUILD_VERSION=${{ env.version }}
+  name: CI
+  
+  # yamllint disable-line rule:truthy
+  on:
+    push:
+      branches:
+        - main
+    pull_request:
+      branches:
+        - main
+      types:
+        - opened
+        - reopened
+        - synchronize
+    workflow_dispatch:
+  
+  jobs:
+    information:
+      name: Gather add-on information
+      runs-on: ubuntu-latest
+      outputs:
+        architectures: ${{ steps.set_outputs.outputs.architectures }}
+        build: ${{ steps.set_outputs.outputs.build }}
+        description: ${{ steps.set_outputs.outputs.description }}
+        name: ${{ steps.set_outputs.outputs.name }}
+        slug: ${{ steps.set_outputs.outputs.slug }}
+        target: ${{ steps.set_outputs.outputs.target }}
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run add-on information action
+          id: information
+          uses: frenck/action-addon-information@v1.4.2
+          with:
+            path: "argonOne/"
+        - name: Set outputs
+          id: set_outputs
+          run: |
+            arch_raw="$(echo "${{ steps.information.outputs.architectures }}" | xargs)"
+            if [[ "$arch_raw" != "["* ]]; then
+              arch_json=$(echo "$arch_raw" | sed 's/,/","/g')
+              echo "architectures=[\"${arch_json}\"]" >> $GITHUB_OUTPUT
+            else
+              echo "architectures=${arch_raw}" >> $GITHUB_OUTPUT
+            fi
+            echo "build=${{ steps.information.outputs.build }}" >> $GITHUB_OUTPUT
+            echo "description=${{ steps.information.outputs.description }}" >> $GITHUB_OUTPUT
+            echo "name=${{ steps.information.outputs.name }}" >> $GITHUB_OUTPUT
+            echo "slug=${{ steps.information.outputs.slug }}" >> $GITHUB_OUTPUT
+            echo "target=${{ steps.information.outputs.target }}" >> $GITHUB_OUTPUT
+  
+    lint-addon:
+      name: Lint Add-on
+      needs:
+        - information
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run Add-on Lint
+          uses: frenck/action-addon-linter@v2
+          with:
+            path: "./${{ needs.information.outputs.target }}"
+  
+    lint-hadolint:
+      name: Hadolint
+      needs:
+        - information
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run Hadolint
+          uses: brpaz/hadolint-action@v1.4.0
+          with:
+            dockerfile: "./${{ needs.information.outputs.target }}/Dockerfile"
+  
+    lint-json:
+      name: JSON Lint
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run JQ
+          run: |
+            shopt -s globstar
+            cat **/*.json | jq '.'
+  
+    lint-markdown:
+      name: MarkdownLint
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run mdl
+          uses: actionshub/markdownlint@v3.1.4
+  
+    lint-shellcheck:
+      name: Shellcheck
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run Shellcheck
+          uses: ludeeus/action-shellcheck@2.0.0
+          env:
+            SHELLCHECK_OPTS: -s bash -e SC2206 -e SC1105 -e SC2046 -e SC2261
+  
+    lint-prettier:
+      name: Prettier
+      runs-on: ubuntu-latest
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+        - name: 🚀 Run Prettier
+          uses: creyD/prettier_action@v3.3
+          with:
+            prettier_options: --write **/*.{json,js,md,yaml}
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+    build:
+      name: Build ${{ matrix.architecture }}
+      needs:
+        - information
+        - lint-addon
+        - lint-hadolint
+        - lint-json
+        - lint-markdown
+        - lint-prettier
+        - lint-shellcheck
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          architecture: ${{ fromJson(needs.information.outputs.architectures) }}
+      steps:
+        - name: ⤵️ Check out code from GitHub
+          uses: actions/checkout@v4.2.2
+  
+        - name: Set build environment variables
+          run: |
+            echo "description=${{ needs.information.outputs.description }}" >> $GITHUB_ENV
+            echo "name=${{ needs.information.outputs.name }}" >> $GITHUB_ENV
+  
+        - name: 🏗 Set up build cache
+          id: cache
+          uses: actions/cache@v4.2.0
+          with:
+            path: /tmp/.docker-cache
+            key: docker-${{ matrix.architecture }}-${{ github.sha }}
+            restore-keys: |
+              docker-${{ matrix.architecture }}
+              docker-
+              
+        - name: 🏗 Set up QEMU
+          uses: docker/setup-qemu-action@v3.4.0
+  
+        - name: 🏗 Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3.9.0
+  
+        - name: 🏗 Set up Codenotary Community Attestation Service (CAS)
+          uses: frenck/action-setup-cas@v0.1.1
+          with:
+            version: v1.0.3
+  
+        - name: ℹ️ Compose build flags
+          id: flags
+          run: |
+            echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+            from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
+            echo "from=${from}" >> $GITHUB_ENV
+            if [[ "${{ matrix.architecture }}" == "amd64" ]]; then
+              echo "platform=linux/amd64" >> $GITHUB_ENV
+            elif [[ "${{ matrix.architecture }}" == "i386" ]]; then
+              echo "platform=linux/386" >> $GITHUB_ENV
+            elif [[ "${{ matrix.architecture }}" == "armhf" ]]; then
+              echo "platform=linux/arm/v6" >> $GITHUB_ENV
+            elif [[ "${{ matrix.architecture }}" == "armv7" ]]; then
+              echo "platform=linux/arm/v7" >> $GITHUB_ENV
+            elif [[ "${{ matrix.architecture }}" == "aarch64" ]]; then
+              echo "platform=linux/arm64/v8" >> $GITHUB_ENV
+            else
+              echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
+              exit 1
+  
+        - name: ℹ️ Get Version
+          id: version
+          run: |
+            echo "version=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+            from=$(yq --no-colors eval ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
+            echo "version=$(grep version: argonOne/config.yaml | sed 's/version: //')" >> $GITHUB_ENV
+  
+        - name: Login to GitHub Container Registry
+          uses: docker/login-action@v3.3.0
+          with:
+            registry: ghcr.io
+            username: ${{ github.actor }}
+            password: ${{ secrets.GITHUB_TOKEN }}
+  
+        - name: 🚀 Build and push
+          uses: docker/build-push-action@v6.13.0
+          with:
+            push: true
+            no-cache: true
+            tags: ghcr.io/${{ github.repository_owner }}/homeassistantargononev3:${{ matrix.architecture }}-${{ env.version }}
+            context: ${{ needs.information.outputs.target }}
+            file: ${{ needs.information.outputs.target }}/Dockerfile
+            platforms: ${{ env.platform }}
+            build-args: |
+              BUILD_ARCH=${{ matrix.architecture }}
+              BUILD_DATE=${{ env.date }}
+              BUILD_DESCRIPTION=${{ env.description }}
+              BUILD_FROM=${{ env.from }}
+              BUILD_NAME=${{ env.name }}
+              BUILD_REF=${{ github.sha }}
+              BUILD_REPOSITORY=${{ github.repository }}
+              BUILD_VERSION=${{ env.version }}
+  
