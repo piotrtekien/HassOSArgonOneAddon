@@ -37,7 +37,7 @@ jobs:
       - name: Set outputs
         id: set_outputs
         run: |
-          arch_raw="${{ steps.information.outputs.architectures }}"
+          arch_raw="$(echo "${{ steps.information.outputs.architectures }}" | xargs)"
           if [[ "$arch_raw" != "["* ]]; then
             arch_json=$(echo "$arch_raw" | sed 's/,/","/g')
             echo "architectures=[\"${arch_json}\"]" >> $GITHUB_OUTPUT
