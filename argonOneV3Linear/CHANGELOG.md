@@ -2,6 +2,7 @@
 
 | Version | Change                                                   |
 | ------- | -------------------------------------------------------- |
+| **31**  | Added support for Archon V3 Master Control               |
 | **30**  | Fix for missing fanspeed indicator in HA                 |
 | **29**  | Detection for Argon One Neo                              |
 | **27**  | Faster fanspeed update                                   |

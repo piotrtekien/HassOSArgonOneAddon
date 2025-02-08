@@ -135,12 +135,12 @@ echo "Detecting I2C layout, expecting to see '1a' or '1b'..."
 calibrate_i2c_port
 echo "I2C Port: ${detected_port} | Device Address: ${device_address}"
 if [ -z "$detected_port" ] || [ "$detected_port" = "255" ]; then
-  echo "Argon One V3 not detected. Exiting."
+  bashio::log.error "Argon One V3 not detected. Exiting."
   exit 1
 fi
 
 # Trap Errors
-trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" "$device_address" 0x63; previous_fan_speed=-1; echo "Safe Mode Activated!"' ERR EXIT INT TERM
+trap 'echo "Error on line ${LINENO}: ${BASH_COMMAND}"; i2cset -y "$detected_port" "$device_address" 0x63; previous_fan_speed=-1; bashio::log.error "Safe Mode Activated!"' ERR EXIT INT TERM
 
 # Loop to Monitor and Control Fan Speed
 entity_update_interval_count=$(( 600 / update_interval ))
@@ -154,7 +154,7 @@ while true; do
   cpu_temp=$(convert_temp "$cpu_temp" "$temp_unit")
   unit="$temp_unit"
 
-  [ "$log_temp" = "true" ] && echo "Current Temperature = ${cpu_temp} °${unit}"
+  [ "$log_temp" = "true" ] && bashio::log.info "Current Temperature = ${cpu_temp} °${unit}"
 
   # Adjust fan speed based on selected mode
   extra_info=""
@@ -170,19 +170,19 @@ while true; do
     "extended")
       if (( cpu_temp <= ext_off )); then
         fan_speed_percent=0
-        extra_info="(Fluid Mode: OFF)"
+        extra_info="(Extended Mode: OFF)"
       elif (( cpu_temp <= ext_low )); then
         fan_speed_percent=15
-        extra_info="(Fluid Mode: Low)"
+        extra_info="(Extended Mode: Low)"
       elif (( cpu_temp <= ext_med )); then
         fan_speed_percent=30
-        extra_info="(Fluid Mode: Medium)"
+        extra_info="(Extended Mode: Medium)"
       elif (( cpu_temp <= ext_high )); then
         fan_speed_percent=45
-        extra_info="(Fluid Mode: High)"
+        extra_info="(Extended Mode: High)"
       else
         fan_speed_percent=60
-        extra_info="(Fluid Mode: Boost)"
+        extra_info="(Extended Mode: Boost)"
       fi
       ;;
   esac
