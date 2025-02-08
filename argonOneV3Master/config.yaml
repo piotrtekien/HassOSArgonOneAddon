@@ -1,4 +1,4 @@
-version: 31
+version: "31"
 slug: argon_one_v3_master_temp
 name: ArgonOne V3 Master Cooling
 description: "Master fan control for ArgonOne V3 case with enhanced temperature regulation and user-friendly settings."

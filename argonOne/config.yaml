@@ -1,4 +1,4 @@
-version: 31
+version: "31"
 slug: argon_one_temp
 name: ArgonOne Active Cooling
 description: "Actively keeping your Argon One cool, with advanced temperature regulation and fan speed control."
