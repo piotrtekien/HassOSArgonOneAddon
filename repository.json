@@ -7,11 +7,11 @@
   "image": "https://raw.githubusercontent.com/piotrtekien/HomeAssistantArgonOneV3/main/icon.png",
   "install_type": "zip",
   "arch": ["armhf", "armv7", "aarch64"],
-  "version": "31",
+  "version": 31,
   "hacs": {
     "releaseNotes": "https://github.com/piotrtekien/HomeAssistantArgonOneV3/releases",
     "installed": false,
-    "currentVersion": "31"
+    "currentVersion": 31
   },
   "repository": "piotrtekien/HomeAssistantArgonOneV3",
   "author": "piotrtekien",
@@ -21,7 +21,7 @@
       "slug": "argon_one_temp",
       "description": "A Home Assistant Addon to control cooling for ArgonOne case via I2C.",
       "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
-      "version": "31",
+      "version": 31,
       "arch": ["armhf", "armv7", "aarch64"],
       "install_type": "zip",
       "environment": "stable"
@@ -31,7 +31,7 @@
       "slug": "argon_one_v3_temp_linear",
       "description": "An advanced linear cooling solution for the ArgonOne V3 case.",
       "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
-      "version": "31",
+      "version": 31,
       "arch": ["armhf", "armv7", "aarch64"],
       "install_type": "zip",
       "environment": "stable"
@@ -41,7 +41,7 @@
       "slug": "argon_one_v3_master_temp",
       "description": "Master fan control for ArgonOne V3 case for ultimate temperature regulation.",
       "url": "https://github.com/piotrtekien/HomeAssistantArgonOneV3",
-      "version": "31",
+      "version": 31,
       "arch": ["armhf", "armv7", "aarch64"],
       "install_type": "zip",
       "environment": "stable"
