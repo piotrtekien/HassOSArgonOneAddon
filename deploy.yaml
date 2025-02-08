@@ -1,7 +1,5 @@
----
 name: Deploy
 
-# yamllint disable-line rule:truthy
 on:
   release:
     types:
@@ -33,7 +31,7 @@ jobs:
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
       - name: 🚀 Run add-on information action
         id: information
         uses: frenck/action-addon-information@v1.0.0
@@ -54,6 +52,7 @@ jobs:
           fi
           echo "environment=${environment}" >> $GITHUB_OUTPUT
           echo "version=${version}" >> $GITHUB_OUTPUT
+
   deploy:
     name: 👷 Build & Deploy ${{ matrix.architecture }}
     needs: information
@@ -63,10 +62,10 @@ jobs:
         architecture: ${{ fromJson(needs.information.outputs.architectures) }}
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
       - name: 🏗 Set up build cache
         id: cache
-        uses: actions/cache@v4.2.0
+        uses: actions/cache@v4
         with:
           path: /tmp/.docker-cache
           key: docker-${{ github.ref }}-${{ matrix.architecture }}-${{ github.sha }}
@@ -82,19 +81,9 @@ jobs:
           echo "date=$(date +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
           from=$(jq --raw-output ".build_from.${{ matrix.architecture }}" "${{ needs.information.outputs.build }}")
           echo "from=${from}" >> $GITHUB_OUTPUT
-          if [[ "${{ matrix.architecture}}" = "amd64" ]]; then
+          # Platform logic
+          if [[ "${{ matrix.architecture }}" = "amd64" ]]; then
             echo "platform=linux/amd64" >> $GITHUB_OUTPUT
-          elif [[ "${{ matrix.architecture }}" = "i386" ]]; then
-            echo "platform=linux/386" >> $GITHUB_OUTPUT
-          elif [[ "${{ matrix.architecture }}" = "armhf" ]]; then
-            echo "platform=linux/arm/v6" >> $GITHUB_OUTPUT
-          elif [[ "${{ matrix.architecture }}" = "armv7" ]]; then
-            echo "platform=linux/arm/v7" >> $GITHUB_OUTPUT
-          elif [[ "${{ matrix.architecture }}" = "aarch64" ]]; then
-            echo "platform=linux/arm64/v8" >> $GITHUB_OUTPUT
-          else
-            echo "::error ::Could not determine platform for architecture ${{ matrix.architecture }}"
-            exit 1
           fi
       - name: 🏗  Login to GitHub Container Registry
         uses: docker/login-action@v3.3.0
@@ -106,11 +95,9 @@ jobs:
         uses: docker/build-push-action@v6.13.0
         with:
           push: true
-          # yamllint disable rule:line-length
           tags: |
             ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
             ghcr.io/hassio-addons/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
-          # yamllint enable rule:line-length
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
@@ -127,6 +114,7 @@ jobs:
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
             BUILD_VERSION=${{ needs.information.outputs.version }}
+
   publish-edge:
     name: 📢 Publish to edge repository
     if: needs.information.outputs.environment == 'edge'
@@ -150,6 +138,7 @@ jobs:
               "repository": "${{ github.repository }}",
               "version": "${{ needs.information.outputs.version }}"
             }
+
   publish-beta:
     name: 📢 Publish to beta repository
     if: |
@@ -175,6 +164,7 @@ jobs:
               "repository": "${{ github.repository }}",
               "version": "${{ github.event.release.tag_name }}"
             }
+
   publish-stable:
     name: 📢 Publish to stable repository
     if: needs.information.outputs.environment == 'stable'
