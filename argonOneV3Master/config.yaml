@@ -60,16 +60,6 @@ options:
           - custom
     default: linear
 
-  temperature_unit:
-    name: "Temperature Unit"
-    description: "Select the temperature unit (Celsius or Fahrenheit)."
-    selector:
-      select:
-        options:
-          - C
-          - F
-    default: C
-
   create_fan_entity:
     name: "Create Fan Speed Entity"
     description: "Create a fan speed entity in Home Assistant for monitoring."
@@ -183,7 +173,6 @@ options:
 
 schema:
   fan_control_mode: str
-  temperature_unit: list(C|F)
   create_fan_entity: bool
   log_temperature: bool
   update_interval: int(1,3600)
@@ -202,7 +191,5 @@ panel_title: "ArgonOne V3 Master Cooling"
 panel_admin: true
 
 advanced: true
-
 stage: stable
-
 init: true

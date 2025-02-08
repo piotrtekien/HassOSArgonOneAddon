@@ -2,9 +2,6 @@ configuration:
   fan_control_mode:
     name: Fan Control Mode
     description: "Choose the mode for controlling the fan speed based on temperature."
-  temperature_unit:
-    name: Temperature Unit
-    description: "Select the unit of temperature (Celsius or Fahrenheit)."
   create_fan_entity:
     name: Create Fan Speed Entity
     description: "Enable to create a fan speed entity in Home Assistant."
