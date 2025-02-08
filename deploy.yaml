@@ -53,7 +53,7 @@ jobs:
             fi
           fi
           echo "environment=${environment}" >> $GITHUB_OUTPUT
-          echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "version=\"${version}\"" >> $GITHUB_OUTPUT
   deploy:
     name: 👷 Build & Deploy ${{ matrix.architecture }}
     needs: information
