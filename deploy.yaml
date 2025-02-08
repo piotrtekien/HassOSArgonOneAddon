@@ -122,7 +122,7 @@ jobs:
             BUILD_NAME=${{ needs.information.outputs.name }}
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
-            BUILD_VERSION=${{ needs.information.outputs.version }}
+            BUILD_VERSION=${{ needs.information.outputs.version }}  # Set version dynamically
 
   publish-edge:
     name: 📢 Publish to edge repository

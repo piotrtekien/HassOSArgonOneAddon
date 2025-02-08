@@ -1,3 +1,4 @@
+---
 name: CI
 
 on:
@@ -158,8 +159,15 @@ jobs:
       - name: ℹ️ Get Version
         id: version
         run: |
-          version=$(grep version: argonOne/config.yaml | sed 's/version: //')
-          version=$(echo $version | tr -d '"')  # Remove quotes
+          # Fetch version from release tag (if release event)
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            version="${{ github.event.release.tag_name }}"
+            version="${version,,}"
+            version="${version#v}"  # Remove 'v' if present
+          else
+            # Use commit hash for non-release events
+            version="${{ github.sha }}"
+          fi
           echo "version=$version" >> "$GITHUB_ENV"
           echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Login to GitHub Container Registry
@@ -185,4 +193,4 @@ jobs:
             BUILD_NAME=${{ needs.information.outputs.name }}
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
-            BUILD_VERSION=${{ needs.information.outputs.version }}
+            BUILD_VERSION=${{ steps.version.outputs.version }}  # Use dynamic version
