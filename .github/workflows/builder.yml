@@ -36,7 +36,15 @@ jobs:
       - name: Set outputs
         id: set_outputs
         run: |
-          echo "architectures=${{ steps.information.outputs.architectures }}" >> $GITHUB_OUTPUT
+          # Convert architectures to a valid JSON array if not already in JSON format.
+          arch_raw="${{ steps.information.outputs.architectures }}"
+          if [[ "$arch_raw" != "["* ]]; then
+            # Assume comma-separated list (e.g. armhf,armv7,aarch64)
+            arch_json=$(echo "$arch_raw" | sed 's/,/","/g')
+            echo "architectures=[\"${arch_json}\"]" >> $GITHUB_OUTPUT
+          else
+            echo "architectures=${arch_raw}" >> $GITHUB_OUTPUT
+          fi
           echo "build=${{ steps.information.outputs.build }}" >> $GITHUB_OUTPUT
           echo "description=${{ steps.information.outputs.description }}" >> $GITHUB_OUTPUT
           echo "name=${{ steps.information.outputs.name }}" >> $GITHUB_OUTPUT
