@@ -193,4 +193,4 @@ jobs:
             BUILD_NAME=${{ needs.information.outputs.name }}
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
-            BUILD_VERSION=${{ steps.version.outputs.version }}  # Use dynamic version
+            BUILD_VERSION=${{ steps.version.outputs.version }}
