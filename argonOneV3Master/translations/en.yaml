@@ -1,0 +1,79 @@
+configuration:
+  fan_control_mode:
+    name: "Fan Control Mode"
+    description: "Choose the mode of fan control. Options are Linear, Fluid, and Extended."
+  
+  Celsius_or_Fahrenheit:
+    name: "Temperature Unit"
+    description: "Select the unit for temperature readings (Celsius or Fahrenheit)."
+  
+  Quiet_Profile:
+    name: "Quiet Profile"
+    description: "Enable Quiet Profile to reduce the fan speed across all modes."
+  
+  Create_a_Fan_Speed_entity_in_Home_Assistant:
+    name: "Create Fan Speed Entity"
+    description: "Create a fan speed entity in Home Assistant to report the current fan speed."
+  
+  Log_current_temperature_every_30_seconds:
+    name: "Log Temperature"
+    description: "Enable logging of the current temperature every 30 seconds for monitoring purposes."
+  
+  Update_Interval:
+    name: "Update Interval"
+    description: "Set the interval (in seconds) for temperature updates."
+  
+  Minimum_Temperature:
+    name: "Minimum Temperature"
+    description: "Set the minimum temperature value for fan speed control (used in all modes)."
+  
+  Maximum_Temperature:
+    name: "Maximum Temperature"
+    description: "Set the maximum temperature value for fan speed control (used in all modes)."
+  
+  Fluid_Sensitivity:
+    name: "Fluid Sensitivity"
+    description: "Adjust the sensitivity for Fluid Mode. Higher values make the fan more responsive."
+  
+  # Extended Mode Temperature Thresholds
+  Extended_Off_Temperature:
+    name: "Extended Off Temperature"
+    description: "Temperature below which the fan will be turned off in Extended Mode."
+  
+  Extended_Low_Temperature:
+    name: "Extended Low Temperature"
+    description: "Temperature for Low Speed fan in Extended Mode."
+  
+  Extended_Medium_Temperature:
+    name: "Extended Medium Temperature"
+    description: "Temperature for Medium Speed fan in Extended Mode."
+  
+  Extended_High_Temperature:
+    name: "Extended High Temperature"
+    description: "Temperature for High Speed fan in Extended Mode."
+  
+  Extended_Boost_Temperature:
+    name: "Extended Boost Temperature"
+    description: "Temperature for Maximum Speed fan in Extended Mode."
+    
+categories:
+  general_settings:
+    name: "General Settings"
+    description: "Configure the overall behavior of the fan control system."
+  
+  fan_speed_control:
+    name: "Fan Speed Control"
+    description: "Set the mode and thresholds for controlling the fan speed."
+  
+  extended_mode:
+    name: "Extended Mode Thresholds"
+    description: "Set the temperature thresholds for the extended fan control modes."
+
+  reporting:
+    name: "Reporting"
+    description: "Enable or disable logging and reporting features for temperature and fan speed."
+
+# Network Port Descriptions
+network:
+  80/TCP:
+    description: "Web interface access for the add-on (if applicable)."

@@ -1,15 +1,20 @@
 version: 30a
 slug: argon_one_v3_master_temp
 name: ArgonOne V3 Master Cooling
-description: "Master fan control for ArgonOne V3 case for ultimate temperature regulation."
+description: >
+  Master fan control for ArgonOne V3 case with advanced temperature regulation and fan speed control.
+  Enables fine-tuned cooling, offering modes like Linear, Fluid, and Extended control, with a Quiet Profile for low noise.
+
 arch:
   - armhf
   - armv7
   - aarch64
+
 auth_api: true
 homeassistant_api: true
 hassio_role: homeassistant
 hassio_api: true
+
 devices:
   - /dev/i2c-0
   - /dev/i2c-1
@@ -21,24 +26,7 @@ devices:
   - /dev/i2c-7
   - /dev/i2c-8
   - /dev/i2c-9
-  - /dev/i2c-10
-  - /dev/i2c-11
-  - /dev/i2c-12
-  - /dev/i2c-13
-  - /dev/i2c-14
-  - /dev/i2c-15
-  - /dev/i2c-16
-  - /dev/i2c-17
-  - /dev/i2c-18
-  - /dev/i2c-19
-  - /dev/i2c-20
-  - /dev/i2c-21
-  - /dev/i2c-22
-  - /dev/i2c-23
-  - /dev/i2c-24
-  - /dev/i2c-25
-  - /dev/i2c-26
-url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
+
 map:
   - homeassistant_config
   - ssl
@@ -46,9 +34,13 @@ map:
   - backup
   - share
   - media
+
+url: https://community.home-assistant.io/t/argon-one-active-cooling-addon/262598/
+
 options:
-  fan_control_mode: linear  # linear, fluid, extended
-  Celsius_or_Fahrenheit: C  # C or F
+  fan_control_mode: "linear"  # Options: "linear", "fluid", "extended"
+  Celsius_or_Fahrenheit: "C"  # Options: "C" or "F"
+  Quiet_Profile: true
   Create_a_Fan_Speed_entity_in_Home_Assistant: true
   Log_current_temperature_every_30_seconds: true
   Update_Interval: 30  # Interval for updating the temperature (in seconds)
@@ -60,19 +52,179 @@ options:
   Extended_Medium_Temperature: 40
   Extended_High_Temperature: 50
   Extended_Boost_Temperature: 60
-  Quiet_Profile: true
+
+# Configuration schema
 schema:
-  fan_control_mode: str
-  Celsius_or_Fahrenheit: list(C|F)
-  Create_a_Fan_Speed_entity_in_Home_Assistant: bool
-  Log_current_temperature_every_30_seconds: bool
-  Update_Interval: int(1,3600)
-  Minimum_Temperature: int(0,255)
-  Maximum_Temperature: int(0,255)
-  Fluid_Sensitivity: float(0,10)
-  Extended_Off_Temperature: float(0,255)
-  Extended_Low_Temperature: float(0,255)
-  Extended_Medium_Temperature: float(0,255)
-  Extended_High_Temperature: float(0,255)
-  Extended_Boost_Temperature: float(0,255)
-  Quiet_Profile: bool
+  # General Settings
+  fan_control_mode:
+    name: "Fan Control Mode"
+    description: "Choose the fan control mode (Linear, Fluid, or Extended)."
+    selector:
+      select:
+        options:
+          - "linear"
+          - "fluid"
+          - "extended"
+
+  Celsius_or_Fahrenheit:
+    name: "Temperature Unit"
+    description: "Select temperature unit (Celsius or Fahrenheit)."
+    selector:
+      select:
+        options:
+          - "C"
+          - "F"
+
+  Quiet_Profile:
+    name: "Quiet Profile"
+    description: "Enable Quiet Profile to reduce fan speed in all modes."
+    selector:
+      boolean: {}
+
+  # Reporting Settings
+  Create_a_Fan_Speed_entity_in_Home_Assistant:
+    name: "Create Fan Speed Entity"
+    description: "Enable creation of a fan speed entity in Home Assistant."
+    selector:
+      boolean: {}
+
+  Log_current_temperature_every_30_seconds:
+    name: "Log Temperature"
+    description: "Enable logging of current temperature every 30 seconds for monitoring."
+    selector:
+      boolean: {}
+
+  # Fan Control & Temperature Settings
+  Update_Interval:
+    name: "Update Interval"
+    description: "Set the interval (in seconds) for updating the temperature reading."
+    selector:
+      number:
+        min: 1
+        max: 3600
+        unit_of_measurement: "seconds"
+
+  Minimum_Temperature:
+    name: "Minimum Temperature"
+    description: "Set the minimum temperature (for fan control)."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Maximum_Temperature:
+    name: "Maximum Temperature"
+    description: "Set the maximum temperature (for fan control)."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Fluid_Sensitivity:
+    name: "Fluid Sensitivity"
+    description: "Adjust the sensitivity of fluid mode."
+    selector:
+      number:
+        min: 1
+        max: 10
+        step: 0.1
+
+  # Extended Mode Temperature Thresholds
+  Extended_Off_Temperature:
+    name: "Extended Off Temperature"
+    description: "Set the temperature for turning off the fan."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Extended_Low_Temperature:
+    name: "Extended Low Temperature"
+    description: "Set the temperature for low-speed fan mode."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Extended_Medium_Temperature:
+    name: "Extended Medium Temperature"
+    description: "Set the temperature for medium-speed fan mode."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Extended_High_Temperature:
+    name: "Extended High Temperature"
+    description: "Set the temperature for high-speed fan mode."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+  Extended_Boost_Temperature:
+    name: "Extended Boost Temperature"
+    description: "Set the temperature for maximum-speed fan mode."
+    selector:
+      number:
+        min: 0
+        max: 255
+        unit_of_measurement: "°C"
+
+# Optional Translations
+translations:
+  en:
+    configuration:
+      fan_control_mode:
+        name: "Fan Control Mode"
+        description: "Select the mode for fan control."
+      Celsius_or_Fahrenheit:
+        name: "Temperature Unit"
+        description: "Select the unit for temperature readings."
+      Quiet_Profile:
+        name: "Quiet Profile"
+        description: "Enable Quiet Profile to reduce noise."
+      Create_a_Fan_Speed_entity_in_Home_Assistant:
+        name: "Create Fan Speed Entity"
+        description: "Allow creating a fan speed sensor entity in Home Assistant."
+      Log_current_temperature_every_30_seconds:
+        name: "Log Temperature"
+        description: "Enable regular temperature logging."
+      Update_Interval:
+        name: "Update Interval"
+        description: "Frequency of temperature updates."
+      Minimum_Temperature:
+        name: "Minimum Temperature"
+        description: "Minimum temperature threshold for fan control."
+      Maximum_Temperature:
+        name: "Maximum Temperature"
+        description: "Maximum temperature threshold for fan control."
+      Fluid_Sensitivity:
+        name: "Fluid Sensitivity"
+        description: "Adjust fluid mode sensitivity."
+      Extended_Off_Temperature:
+        name: "Extended Off Temperature"
+        description: "Temperature to turn off the fan."
+      Extended_Low_Temperature:
+        name: "Extended Low Temperature"
+        description: "Temperature for low fan speed."
+      Extended_Medium_Temperature:
+        name: "Extended Medium Temperature"
+        description: "Temperature for medium fan speed."
+      Extended_High_Temperature:
+        name: "Extended High Temperature"
+        description: "Temperature for high fan speed."
+      Extended_Boost_Temperature:
+        name: "Extended Boost Temperature"
+        description: "Temperature for full fan speed."
+
+  # Adding an optional network description for port usage if needed in the future
+  network:
+    80/TCP:
+      description: "Web interface access for the add-on (if applicable)."
