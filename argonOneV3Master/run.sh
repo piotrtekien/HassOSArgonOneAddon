@@ -9,19 +9,19 @@ device_address=""
 
 # Load all configurations using bashio
 fan_control_mode=$(bashio::config 'fan_control_mode' 'linear')
-temp_unit=$(bashio::config 'Celsius_or_Fahrenheit' 'C')
-create_entity=$(bashio::config 'Create_a_Fan_Speed_entity_in_Home_Assistant' true)
-log_temp=$(bashio::config 'Log_current_temperature_every_30_seconds' true)
-update_interval=$(bashio::config 'Update_Interval' 30)
-min_temp=$(bashio::config 'Minimum_Temperature' 20)
-max_temp=$(bashio::config 'Maximum_Temperature' 70)
-fluid_sensitivity=$(bashio::config 'Fluid_Sensitivity' 2.0)
-ext_off=$(bashio::config 'Extended_Off_Temperature' 20)
-ext_low=$(bashio::config 'Extended_Low_Temperature' 30)
-ext_med=$(bashio::config 'Extended_Medium_Temperature' 40)
-ext_high=$(bashio::config 'Extended_High_Temperature' 50)
-ext_boost=$(bashio::config 'Extended_Boost_Temperature' 60)
-quiet=$(bashio::config 'Quiet_Profile' true)
+temp_unit=$(bashio::config 'temperature_unit' 'C')
+create_entity=$(bashio::config 'create_fan_entity' true)
+log_temp=$(bashio::config 'log_temperature' true)
+update_interval=$(bashio::config 'update_interval' 30)
+min_temp=$(bashio::config 'min_temperature' 20)
+max_temp=$(bashio::config 'max_temperature' 70)
+fluid_sensitivity=$(bashio::config 'fluid_sensitivity' 2.0)
+ext_off=$(bashio::config 'extended_off_temp' 20)
+ext_low=$(bashio::config 'extended_low_temp' 30)
+ext_med=$(bashio::config 'extended_med_temp' 40)
+ext_high=$(bashio::config 'extended_high_temp' 50)
+ext_boost=$(bashio::config 'extended_boost_temp' 60)
+quiet=$(bashio::config 'quiet_profile' true)
 
 # Default value assignments if missing
 [ -z "$ext_off" ] && ext_off=20
@@ -31,15 +31,19 @@ quiet=$(bashio::config 'Quiet_Profile' true)
 [ -z "$ext_boost" ] && ext_boost=60
 [ -z "$fluid_sensitivity" ] && fluid_sensitivity=2.0
 
-# Temperature Conversion Function (Handles both Celsius and Fahrenheit)
+#######################################
+# Functions
+#######################################
+
+# Temperature Conversion Function
 convert_temp() {
   local temp="$1"
   if [ "$temp_unit" = "F" ]; then
     # Convert Celsius to Fahrenheit
     echo "$(( (temp * 9 / 5) + 32 ))"
   else
-    # Convert Fahrenheit to Celsius
-    echo "$(( (temp - 32) * 5 / 9 ))"
+    # Already in Celsius
+    echo "$temp"
   fi
 }
 
@@ -73,7 +77,8 @@ calibrate_i2c_port() {
 report_fan_speed() {
   local fan_speed_percent="$1"
   local cpu_temp="$2"
-  local extra_info="$3"
+  local temp_unit="$3"
+  local extra_info="$4"
   local icon="mdi:fan"
   local friendly_name="Argon Fan Speed"
   [ -n "$extra_info" ] && friendly_name="${friendly_name} ${extra_info}"
@@ -151,7 +156,7 @@ while true; do
   cpu_temp=$(( cpu_raw_temp / 1000 ))
 
   # Convert temperature if needed
-  cpu_temp=$(convert_temp "$cpu_temp" "$temp_unit")
+  cpu_temp=$(convert_temp "$cpu_temp")
   unit="$temp_unit"
 
   [ "$log_temp" = "true" ] && bashio::log.info "Current Temperature = ${cpu_temp} °${unit}"
@@ -164,7 +169,13 @@ while true; do
       extra_info="(Linear Mode)"
       ;;
     "fluid")
-      fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v exp="$fluid_sensitivity" 'BEGIN { ratio = (t - tmin) / (tmax - tmin); if (ratio < 0) ratio = 0; if (ratio > 1) ratio = 1; printf "%d", (ratio ^ exp) * 100; }')
+      # Note: Using awk’s exponentiation operator (works in GNU awk)
+      fan_speed_percent=$(awk -v t="$cpu_temp" -v tmin="$min_temp" -v tmax="$max_temp" -v sensitivity="$fluid_sensitivity" 'BEGIN {
+          ratio = (t - tmin) / (tmax - tmin);
+          if (ratio < 0) ratio = 0;
+          if (ratio > 1) ratio = 1;
+          printf "%d", (ratio ^ sensitivity) * 100;
+      }')
       extra_info="(Fluid Mode, Sensitivity: ${fluid_sensitivity})"
       ;;
     "extended")
